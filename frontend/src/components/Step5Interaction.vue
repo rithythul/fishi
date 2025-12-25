@@ -154,7 +154,7 @@
               <div class="tools-card-avatar">R</div>
               <div class="tools-card-info">
                 <div class="tools-card-name">Report Agent - Chat</div>
-                <div class="tools-card-subtitle">Report GenerationIntelligent体ofQuickto话版本，可调use 4 种Professional工具，拥YesMiroFishofcomplete记忆</div>
+                <div class="tools-card-subtitle">Quick chat version of Report Agent, can use 4 professional tools with full Fishi memory</div>
               </div>
               <button class="tools-card-toggle" @click="showToolsDetail = !showToolsDetail">
                 <svg :class="{ 'is-expanded': showToolsDetail }" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -171,8 +171,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">InsightForge Deep归因</div>
-                    <div class="tool-desc">to齐现实世界SeeddatawithSimulationEnvironmentstatus，结合Global/Local Memory机制，Provide跨时空ofDeep归因Analyze</div>
+                    <div class="tool-name">InsightForge Deep Analysis</div>
+                    <div class="tool-desc">Aligns real-world seed data with simulation environment status, combining Global/Local Memory for deep cross-temporal analysis</div>
                   </div>
                 </div>
                 <div class="tool-item tool-blue">
@@ -183,8 +183,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">PanoramaSearch panorama追踪</div>
-                    <div class="tool-desc">基于图结构of广度遍历Algorithm，重构事件传播路径，catch全量Info流动of拓扑结构</div>
+                    <div class="tool-name">PanoramaSearch Tracking</div>
+                    <div class="tool-desc">Graph-based breadth traversal algorithm, reconstructs event propagation paths, captures complete info flow topology</div>
                   </div>
                 </div>
                 <div class="tool-item tool-orange">
@@ -194,8 +194,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">QuickSearch Quick检索</div>
-                    <div class="tool-desc">基于 GraphRAG of即时Queryinterface，Optimizeindex效率，use于QuickExtract具体ofNodesattributeswith离散facts</div>
+                    <div class="tool-name">QuickSearch Retrieval</div>
+                    <div class="tool-desc">GraphRAG-based instant query interface, optimized indexing for quick extraction of specific node attributes and discrete facts</div>
                   </div>
                 </div>
                 <div class="tool-item tool-green">
@@ -207,8 +207,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">InterviewSubAgent 虚拟访谈</div>
-                    <div class="tool-desc">自主式访谈，can够并行withSimulation世界中units体进行多roundsto话，采集非结构化ofPerspectivedatawith心理status</div>
+                    <div class="tool-name">InterviewSubAgent Virtual Interview</div>
+                    <div class="tool-desc">Autonomous interviews that can conduct parallel multi-round conversations with agents, collecting unstructured perspective data and psychological states</div>
                   </div>
                 </div>
               </div>
@@ -249,7 +249,7 @@
                 </svg>
               </div>
               <p class="empty-text">
-                {{ chatTarget === 'report_agent' ? 'with Report Agent to话，In-depth解Reportcontent' : 'withSimulationunits体to话，understand their perspective' }}
+                {{ chatTarget === 'report_agent' ? 'Chat with Report Agent to understand report content in depth' : 'Chat with simulation agents to understand their perspective' }}
               </p>
             </div>
             <div 
@@ -291,7 +291,7 @@
             <textarea 
               v-model="chatInput"
               class="chat-input"
-              placeholder="输入您ofProblem..."
+              placeholder="Enter your question..."
               @keydown.enter.exact.prevent="sendMessage"
               :disabled="isSending || (!selectedAgent && chatTarget === 'agent')"
               rows="1"
@@ -316,8 +316,8 @@
           <div class="survey-setup">
             <div class="setup-section">
               <div class="section-header">
-                <span class="section-title">选择调查to象</span>
-                <span class="selection-count">已选 {{ selectedAgents.size }} / {{ profiles.length }}</span>
+                <span class="section-title">Select Survey Targets</span>
+                <span class="selection-count">Selected {{ selectedAgents.size }} / {{ profiles.length }}</span>
               </div>
               <div class="agents-grid">
                 <label 
@@ -352,7 +352,7 @@
 
             <div class="setup-section">
               <div class="section-header">
-                <span class="section-title">问卷Problem</span>
+                <span class="section-title">Survey Question</span>
               </div>
               <textarea 
                 v-model="surveyQuestion"
@@ -368,15 +368,15 @@
               @click="submitSurvey"
             >
               <span v-if="isSurveying" class="loading-spinner"></span>
-              <span v-else>Send问卷</span>
+              <span v-else>Send Survey</span>
             </button>
           </div>
 
           <!-- Survey Results -->
           <div v-if="surveyResults.length > 0" class="survey-results">
             <div class="results-header">
-              <span class="results-title">调查result</span>
-              <span class="results-count">{{ surveyResults.length }} itemsReply</span>
+              <span class="results-title">Survey Results</span>
+              <span class="results-count">{{ surveyResults.length }} responses</span>
             </div>
             <div class="results-list">
               <div 

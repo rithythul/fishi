@@ -1,6 +1,6 @@
 """
 图谱构建service
-interface2：useZep API构建Standalone Graph
+interface2：use Neo4j 构建 Knowledge Graph
 """
 
 import os
@@ -9,13 +9,16 @@ import time
 import threading
 from typing import Dict, Any, List, Optional, Callable
 from dataclasses import dataclass
-
-from zep_cloud.client import Zep
-from zep_cloud import EpisodeData, EntityEdgeSourceTarget
+from datetime import datetime
 
 from ..config import Config
 from ..models.task import TaskManager, TaskStatus
 from .text_processor import TextProcessor
+from .neo4j_service import Neo4jService
+from .llm_entity_extractor import LLMEntityExtractor
+from ..utils.logger import get_logger
+
+logger = get_logger('mirofish.graph_builder')
 
 
 @dataclass
@@ -38,16 +41,25 @@ class GraphInfo:
 class GraphBuilderService:
     """
     图谱构建service
-    负责callZep API构建知识图谱
+    负责call Neo4j 构建知识图谱
     """
     
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or Config.ZEP_API_KEY
-        if not self.api_key:
-            raise ValueError("ZEP_API_KEY not configured")
+        """
+        Initialize graph builder with Neo4j
         
-        self.client = Zep(api_key=self.api_key)
+        Args:
+            api_key: Not used anymore (kept for API compatibility)
+        """
+        # Initialize Neo4j service
+        self.neo4j = Neo4jService()
+        
+        # Initialize LLM entity extractor
+        self.entity_extractor = LLMEntityExtractor()
+        
         self.task_manager = TaskManager()
+        
+        logger.info("GraphBuilderService initialized with Neo4j")
     
     def build_graph_async(
         self,
@@ -119,7 +131,7 @@ class GraphBuilderService:
                 message=f"graphalreadycreate: {graph_id}"
             )
             
-            # 2. setontology
+            # 2. setontology (create constraints and indexes)
             self.set_ontology(graph_id, ontology)
             self.task_manager.update_task(
                 task_id,
@@ -136,33 +148,17 @@ class GraphBuilderService:
                 message=f"文本alreadysplitfor {total_chunks} blocks"
             )
             
-            # 4. 分批sendcount据
-            episode_uuids = self.add_text_batches(
-                graph_id, chunks, batch_size,
+            # 4. 分批处理文本，提取实体并添加到图谱
+            self.add_text_batches(
+                graph_id, chunks, ontology, batch_size,
                 lambda msg, prog: self.task_manager.update_task(
                     task_id,
-                    progress=20 + int(prog * 0.4),  # 20-60%
+                    progress=20 + int(prog * 70),  # 20-90%
                     message=msg
                 )
             )
             
-            # 5. waitingZepprocessingcompleted
-            self.task_manager.update_task(
-                task_id,
-                progress=60,
-                message="waitingZepprocessingcount据..."
-            )
-            
-            self._wait_for_episodes(
-                episode_uuids,
-                lambda msg, prog: self.task_manager.update_task(
-                    task_id,
-                    progress=60 + int(prog * 0.35),  # 60-95%
-                    message=msg
-                )
-            )
-            
-            # 6. getgraphinformation
+            # 5. getgraphinformation
             self.task_manager.update_task(
                 task_id,
                 progress=95,
@@ -188,118 +184,99 @@ class GraphBuilderService:
         except Exception as e:
             import traceback
             error_msg = f"{str(e)}\n{traceback.format_exc()}"
+            logger.error(f"Graph build failed: {error_msg}")
             self.task_manager.fail_task(task_id, error_msg)
     
     def create_graph(self, name: str) -> str:
-        """createZepgraph（公开method）"""
+        """
+        create Neo4j graph（公开method）
+        
+        Args:
+            name: Graph name
+            
+        Returns:
+            Graph ID
+        """
         graph_id = f"mirofish_{uuid.uuid4().hex[:16]}"
         
-        self.client.graph.create(
-            graph_id=graph_id,
-            name=name,
-            description="MiroFish Social Simulation Graph"
+        # Create graph metadata node
+        self.neo4j.create_node(
+            labels=["Graph", "Metadata"],
+            properties={
+                "graph_id": graph_id,
+                "name": name,
+                "description": "MiroFish Social Simulation Graph",
+                "created_at": datetime.now().isoformat()
+            }
         )
         
+        # Create constraints and indexes
+        self.neo4j.create_constraints(graph_id)
+        
+        logger.info(f"Created graph: {graph_id}")
         return graph_id
     
     def set_ontology(self, graph_id: str, ontology: Dict[str, Any]):
-        """setgraphontology（公开method）"""
-        import warnings
-        from typing import Optional
-        from pydantic import Field
-        from zep_cloud.external_clients.ontology import EntityModel, EntityText, EdgeModel
+        """
+        setgraphontology（公开method）
         
-        # 抑制 Pydantic v2 about Field(default=None) warnings
-        # thisis Zep SDK want求ofuse法，warningcome自动态classcreate，can安全忽略
-        warnings.filterwarnings('ignore', category=UserWarning, module='pydantic')
+        In Neo4j, we store ontology as metadata and create indexes
         
-        # Zep 保留名称，notcan作forattributes名
-        RESERVED_NAMES = {'uuid', 'name', 'group_id', 'name_embedding', 'summary', 'created_at'}
+        Args:
+            graph_id: Graph ID
+            ontology: Ontology definition
+        """
+        # Store ontology in metadata
+        query = """
+        MATCH (g:Graph:Metadata {graph_id: $graph_id})
+        SET g.ontology = $ontology
+        """
         
-        def safe_attr_name(attr_name: str) -> str:
-            """ will 保留名称convertfor安全名称"""
-            if attr_name.lower() in RESERVED_NAMES:
-                return f"entity_{attr_name}"
-            return attr_name
+        self.neo4j.execute_write(
+            query,
+            {
+                "graph_id": graph_id,
+                "ontology": str(ontology)  # Convert to string for storage
+            }
+        )
         
-        # 动态createentity types
-        entity_types = {}
-        for entity_def in ontology.get("entity_types", []):
-            name = entity_def["name"]
-            description = entity_def.get("description", f"A {name} entity.")
-            
-            # createattributesdictionaryandtype注解（Pydantic v2 需want）
-            attrs = {"__doc__": description}
-            annotations = {}
-            
-            for attr_def in entity_def.get("attributes", []):
-                attr_name = safe_attr_name(attr_def["name"])  # use安全名称
-                attr_desc = attr_def.get("description", attr_name)
-                # Zep API 需want Field of description，thisis必需of
-                attrs[attr_name] = Field(description=attr_desc, default=None)
-                annotations[attr_name] = Optional[EntityText]  # type注解
-            
-            attrs["__annotations__"] = annotations
-            
-            # 动态createclass
-            entity_class = type(name, (EntityModel,), attrs)
-            entity_class.__doc__ = description
-            entity_types[name] = entity_class
+        # Create indexes for entity types
+        entity_types = ontology.get("entity_types", [])
+        for entity_type in entity_types:
+            type_name = entity_type.get("name", "")
+            if type_name:
+                try:
+                    # Create index for this entity type
+                    index_query = f"CREATE INDEX {graph_id}_{type_name}_name IF NOT EXISTS FOR (n:{type_name}) ON (n.name)"
+                    with self.neo4j.session() as session:
+                        session.run(index_query)
+                except Exception as e:
+                    logger.warning(f"Could not create index for {type_name}: {e}")
         
-        # 动态createedgetype
-        edge_definitions = {}
-        for edge_def in ontology.get("edge_types", []):
-            name = edge_def["name"]
-            description = edge_def.get("description", f"A {name} relationship.")
-            
-            # createattributesdictionaryandtype注解
-            attrs = {"__doc__": description}
-            annotations = {}
-            
-            for attr_def in edge_def.get("attributes", []):
-                attr_name = safe_attr_name(attr_def["name"])  # use安全名称
-                attr_desc = attr_def.get("description", attr_name)
-                # Zep API 需want Field of description，thisis必需of
-                attrs[attr_name] = Field(description=attr_desc, default=None)
-                annotations[attr_name] = Optional[str]  # edgeattributesusestrtype
-            
-            attrs["__annotations__"] = annotations
-            
-            # 动态createclass
-            class_name = ''.join(word.capitalize() for word in name.split('_'))
-            edge_class = type(class_name, (EdgeModel,), attrs)
-            edge_class.__doc__ = description
-            
-            # 构建source_targets
-            source_targets = []
-            for st in edge_def.get("source_targets", []):
-                source_targets.append(
-                    EntityEdgeSourceTarget(
-                        source=st.get("source", "Entity"),
-                        target=st.get("target", "Entity")
-                    )
-                )
-            
-            if source_targets:
-                edge_definitions[name] = (edge_class, source_targets)
-        
-        # callZep APIsetontology
-        if entity_types or edge_definitions:
-            self.client.graph.set_ontology(
-                graph_ids=[graph_id],
-                entities=entity_types if entity_types else None,
-                edges=edge_definitions if edge_definitions else None,
-            )
+        logger.info(f"Set ontology for graph {graph_id}")
     
     def add_text_batches(
         self,
         graph_id: str,
         chunks: List[str],
+        ontology: Dict[str, Any],
         batch_size: int = 3,
         progress_callback: Optional[Callable] = None
     ) -> List[str]:
-        """分批添加文本到graph，return所have episode of uuid list"""
-        episode_uuids = []
+        """
+        分批添加文本到graph，use LLM提取实体并添加到Neo4j
+        
+        Args:
+            graph_id: Graph ID
+            chunks: Text chunks
+            ontology: Ontology definition
+            batch_size: Batch size
+            progress_callback: Progress callback
+            
+        Returns:
+            List of processed chunk IDs
+        """
+        processed_ids = []
         total_chunks = len(chunks)
         
         for i in range(0, total_chunks, batch_size):
@@ -310,117 +287,169 @@ class GraphBuilderService:
             if progress_callback:
                 progress = (i + len(batch_chunks)) / total_chunks
                 progress_callback(
-                    f"send第 {batch_num}/{total_batches} 批count据 ({len(batch_chunks)} blocks)...",
+                    f"Processing batch {batch_num}/{total_batches} ({len(batch_chunks)} chunks)...",
                     progress
                 )
             
-            # 构建episodecount据
-            episodes = [
-                EpisodeData(data=chunk, type="text")
-                for chunk in batch_chunks
-            ]
-            
-            # send到Zep
-            try:
-                batch_result = self.client.graph.add_batch(
-                    graph_id=graph_id,
-                    episodes=episodes
-                )
-                
-                # 收集returnof episode uuid
-                if batch_result and isinstance(batch_result, list):
-                    for ep in batch_result:
-                        ep_uuid = getattr(ep, 'uuid_', None) or getattr(ep, 'uuid', None)
-                        if ep_uuid:
-                            episode_uuids.append(ep_uuid)
-                
-                # 避免request过快
-                time.sleep(1)
-                
-            except Exception as e:
-                if progress_callback:
-                    progress_callback(f"批times {batch_num} sendfailed: {str(e)}", 0)
-                raise
-        
-        return episode_uuids
-    
-    def _wait_for_episodes(
-        self,
-        episode_uuids: List[str],
-        progress_callback: Optional[Callable] = None,
-        timeout: int = 600
-    ):
-        """waiting所have episode processingcompleted（throughquery每 episode of processed status）"""
-        if not episode_uuids:
-            if progress_callback:
-                progress_callback("无需waiting（没have episode）", 1.0)
-            return
-        
-        start_time = time.time()
-        pending_episodes = set(episode_uuids)
-        completed_count = 0
-        total_episodes = len(episode_uuids)
-        
-        if progress_callback:
-            progress_callback(f"startwaiting {total_episodes} 文本blocksprocessing...", 0)
-        
-        while pending_episodes:
-            if time.time() - start_time > timeout:
-                if progress_callback:
-                    progress_callback(
-                        f"部分文本blockstimeout，alreadycompleted {completed_count}/{total_episodes}",
-                        completed_count / total_episodes
-                    )
-                break
-            
-            # check每 episode ofprocessingstatus
-            for ep_uuid in list(pending_episodes):
+            # Process each chunk
+            for chunk in batch_chunks:
                 try:
-                    episode = self.client.graph.episode.get(uuid_=ep_uuid)
-                    is_processed = getattr(episode, 'processed', False)
+                    # Extract entities and relationships using LLM
+                    extraction = self.entity_extractor.extract_entities(chunk, ontology)
                     
-                    if is_processed:
-                        pending_episodes.remove(ep_uuid)
-                        completed_count += 1
-                        
+                    # Add to Neo4j
+                    self._add_extraction_to_graph(
+                        graph_id,
+                        extraction,
+                        source_text=chunk[:100]  # First 100 chars for reference
+                    )
+                    
+                    processed_ids.append(f"chunk_{i}")
+                    
                 except Exception as e:
-                    # 忽略单queryerror，continue
-                    pass
+                    logger.error(f"Failed to process chunk {i}: {e}")
             
-            elapsed = int(time.time() - start_time)
-            if progress_callback:
-                progress_callback(
-                    f"Zepprocessing ... {completed_count}/{total_episodes} completed, {len(pending_episodes)} 待process ({elapsed}秒)",
-                    completed_count / total_episodes if total_episodes > 0 else 0
-                )
-            
-            if pending_episodes:
-                time.sleep(3)  # 每3秒check一times
+            # Avoid request overload
+            time.sleep(0.5)
         
-        if progress_callback:
-            progress_callback(f"processingcompleted: {completed_count}/{total_episodes}", 1.0)
+        return processed_ids
+    
+    def _add_extraction_to_graph(
+        self,
+        graph_id: str,
+        extraction: Dict[str, Any],
+        source_text: str = ""
+    ):
+        """
+        Add extracted entities and relationships to Neo4j graph
+        
+        Args:
+            graph_id: Graph ID
+            extraction: Extraction result from LLM
+            source_text: Source text reference
+        """
+        entities = extraction.get("entities", [])
+        relationships = extraction.get("relationships", [])
+        
+        # Track entity name to UUID mapping for this extraction
+        entity_map = {}
+        
+        # Add entities
+        for entity in entities:
+            name = entity.get("name", "")
+            labels = entity.get("labels", [])
+            properties = entity.get("properties", {})
+            
+            if not name or not labels:
+                continue
+            
+            # Add graph_id and timestamps to properties
+            properties["graph_id"] = graph_id
+            properties["name"] = name
+            properties["created_at"] = datetime.now().isoformat()
+            
+            # Check if entity already exists
+            existing = self.neo4j.execute_query(
+                "MATCH (n {graph_id: $graph_id, name: $name}) RETURN n.uuid as uuid LIMIT 1",
+                {"graph_id": graph_id, "name": name}
+            )
+            
+            if existing:
+                # Entity exists, use existing UUID
+                entity_uuid = existing[0]["uuid"]
+                entity_map[name] = entity_uuid
+                
+                # Update properties
+                update_query = f"""
+                MATCH (n {{uuid: $uuid}})
+                SET n += $properties
+                """
+                self.neo4j.execute_write(update_query, {
+                    "uuid": entity_uuid,
+                    "properties": properties
+                })
+            else:
+                # Create new entity
+                entity_uuid = self.neo4j.create_node(
+                    labels=["GraphNode"] + labels,
+                    properties=properties
+                )
+                entity_map[name] = entity_uuid
+        
+        # Add relationships
+        for rel in relationships:
+            source_name = rel.get("source_name", "")
+            target_name = rel.get("target_name", "")
+            rel_type = rel.get("type", "RELATED_TO")
+            rel_props = rel.get("properties", {})
+            
+            if not all([source_name, target_name]):
+                continue
+            
+            # Get UUIDs
+            source_uuid = entity_map.get(source_name)
+            target_uuid = entity_map.get(target_name)
+            
+            if not source_uuid or not target_uuid:
+                continue
+            
+            # Add temporal properties
+            rel_props["created_at"] = datetime.now().isoformat()
+            rel_props["graph_id"] = graph_id
+            
+            # Create relationship
+            self.neo4j.create_relationship(
+                source_uuid,
+                target_uuid,
+                rel_type,
+                rel_props
+            )
     
     def _get_graph_information(self, graph_id: str) -> GraphInfo:
-        """getgraphinformation"""
-        # getnode
-        nodes = self.client.graph.node.get_by_graph_id(graph_id=graph_id)
+        """
+        getgraphinformation
         
-        # getedge
-        edges = self.client.graph.edge.get_by_graph_id(graph_id=graph_id)
+        Args:
+            graph_id: Graph ID
+            
+        Returns:
+            GraphInfo object
+        """
+        # Get node count
+        node_result = self.neo4j.execute_query(
+            "MATCH (n:GraphNode {graph_id: $graph_id}) RETURN count(n) as count",
+            {"graph_id": graph_id}
+        )
+        node_count = node_result[0]["count"] if node_result else 0
         
-        # statisticsentity types
-        entity_types = set()
-        for node in nodes:
-            if node.labels:
-                for label in node.labels:
-                    if label not in ["Entity", "Node"]:
-                        entity_types.add(label)
+        # Get edge count
+        edge_result = self.neo4j.execute_query(
+            """
+            MATCH (a:GraphNode {graph_id: $graph_id})-[r]->(b:GraphNode {graph_id: $graph_id})
+            RETURN count(r) as count
+            """,
+            {"graph_id": graph_id}
+        )
+        edge_count = edge_result[0]["count"] if edge_result else 0
+        
+        # Get entity types
+        types_result = self.neo4j.execute_query(
+            """
+            MATCH (n:GraphNode {graph_id: $graph_id})
+            UNWIND labels(n) as label
+            WITH DISTINCT label
+            WHERE label <> 'GraphNode'
+            RETURN collect(label) as types
+            """,
+            {"graph_id": graph_id}
+        )
+        entity_types = types_result[0]["types"] if types_result else []
         
         return GraphInfo(
             graph_id=graph_id,
-            node_count=len(nodes),
-            edge_count=len(edges),
-            entity_types=list(entity_types)
+            node_count=node_count,
+            edge_count=edge_count,
+            entity_types=entity_types
         )
     
     def get_graph_data(self, graph_id: str) -> Dict[str, Any]:
@@ -431,65 +460,57 @@ class GraphBuilderService:
             graph_id: 图谱ID
             
         Returns:
-            containsnodesandedgesofdictionary，package括timeinformation、attributesetcdetailedcount据
+            containsnodesandedgesofdictionary
         """
-        nodes = self.client.graph.node.get_by_graph_id(graph_id=graph_id)
-        edges = self.client.graph.edge.get_by_graph_id(graph_id=graph_id)
-        
-        # createnode映射use于getnodes名称
-        node_map = {}
-        for node in nodes:
-            node_map[node.uuid_] = node.name or ""
+        # Get all nodes
+        nodes_result = self.neo4j.execute_query(
+            """
+            MATCH (n:GraphNode {graph_id: $graph_id})
+            RETURN n, labels(n) as labels
+            """,
+            {"graph_id": graph_id}
+        )
         
         nodes_data = []
-        for node in nodes:
-            # getcreatetime
-            created_at = getattr(node, 'created_at', None)
-            if created_at:
-                created_at = str(created_at)
+        for record in nodes_result:
+            node = dict(record["n"])
+            labels = [l for l in record["labels"] if l != "GraphNode"]
             
             nodes_data.append({
-                "uuid": node.uuid_,
-                "name": node.name,
-                "labels": node.labels or [],
-                "summary": node.summary or "",
-                "attributes": node.attributes or {},
-                "created_at": created_at,
+                "uuid": node.get("uuid", ""),
+                "name": node.get("name", ""),
+                "labels": labels,
+                "summary": node.get("summary", ""),
+                "attributes": {k: v for k, v in node.items() if k not in ["uuid", "name", "graph_id", "created_at"]},
+                "created_at": node.get("created_at"),
             })
         
+        # Get all edges
+        edges_result = self.neo4j.execute_query(
+            """
+            MATCH (a:GraphNode {graph_id: $graph_id})-[r]->(b:GraphNode {graph_id: $graph_id})
+            RETURN a.uuid as source_uuid, a.name as source_name,
+                   b.uuid as target_uuid, b.name as target_name,
+                   type(r) as rel_type, properties(r) as rel_props
+            """,
+            {"graph_id": graph_id}
+        )
+        
         edges_data = []
-        for edge in edges:
-            # gettimeinformation
-            created_at = getattr(edge, 'created_at', None)
-            valid_at = getattr(edge, 'valid_at', None)
-            invalid_at = getattr(edge, 'invalid_at', None)
-            expired_at = getattr(edge, 'expired_at', None)
-            
-            # get episodes
-            episodes = getattr(edge, 'episodes', None) or getattr(edge, 'episode_ids', None)
-            if episodes and not isinstance(episodes, list):
-                episodes = [str(episodes)]
-            elif episodes:
-                episodes = [str(e) for e in episodes]
-            
-            # get fact_type
-            fact_type = getattr(edge, 'fact_type', None) or edge.name or ""
+        for record in edges_result:
+            rel_props = record["rel_props"]
             
             edges_data.append({
-                "uuid": edge.uuid_,
-                "name": edge.name or "",
-                "fact": edge.fact or "",
-                "fact_type": fact_type,
-                "source_node_uuid": edge.source_node_uuid,
-                "target_node_uuid": edge.target_node_uuid,
-                "source_node_name": node_map.get(edge.source_node_uuid, ""),
-                "target_node_name": node_map.get(edge.target_node_uuid, ""),
-                "attributes": edge.attributes or {},
-                "created_at": str(created_at) if created_at else None,
-                "valid_at": str(valid_at) if valid_at else None,
-                "invalid_at": str(invalid_at) if invalid_at else None,
-                "expired_at": str(expired_at) if expired_at else None,
-                "episodes": episodes or [],
+                "uuid": rel_props.get("uuid", ""),
+                "name": record["rel_type"],
+                "fact": rel_props.get("fact", ""),
+                "fact_type": record["rel_type"],
+                "source_node_uuid": record["source_uuid"],
+                "target_node_uuid": record["target_uuid"],
+                "source_node_name": record["source_name"],
+                "target_node_name": record["target_name"],
+                "attributes": {k: v for k, v in rel_props.items() if k not in ["graph_id", "created_at"]},
+                "created_at": rel_props.get("created_at"),
             })
         
         return {
@@ -501,6 +522,11 @@ class GraphBuilderService:
         }
     
     def delete_graph(self, graph_id: str):
-        """deletegraph"""
-        self.client.graph.delete(graph_id=graph_id)
-
+        """
+        deletegraph
+        
+        Args:
+            graph_id: Graph ID
+        """
+        self.neo4j.delete_graph(graph_id)
+        logger.info(f"Deleted graph: {graph_id}")

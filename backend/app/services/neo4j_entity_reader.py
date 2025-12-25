@@ -1,8 +1,6 @@
 """
-Neo4j entities read with filter service
-from Neo4j graph read nodes, filter出符合预定义entities type of
-
-nodes
+Neo4j Entity Reader with Filter Service
+Reads nodes from Neo4j graph and filters out entities matching predefined types
 """
 
 import time
@@ -15,21 +13,21 @@ from .neo4j_service import Neo4jService
 
 logger = get_logger('fishi.neo4j_entity_reader')
 
-# use于泛型return type
+# For generic return type
 T = TypeVar('T')
 
 
 @dataclass
 class EntityNode:
-    """entity node count据structure"""
+    """Entity node data structure"""
     uuid: str
     name: str
     labels: List[str]
     summary: str
     attributes: Dict[str, Any]
-    # related of edge information
+    # Related edge information
     related_edges: List[Dict[str, Any]] = field(default_factory=list)
-    # related of其he node information
+    # Related node information
     related_nodes: List[Dict[str, Any]] = field(default_factory=list)
     
     def to_dict(self) -> Dict[str, Any]:
@@ -44,7 +42,7 @@ class EntityNode:
         }
     
     def get_entity_type(self) -> Optional[str]:
-        """get entity types（排除默认of GraphNode label）"""
+        """Get entity type (excluding default GraphNode label)"""
         for label in self.labels:
             if label not in ["Entity", "Node", "GraphNode"]:
                 return label
@@ -53,7 +51,7 @@ class EntityNode:
 
 @dataclass
 class FilteredEntities:
-    """filter后 of entities set"""
+    """Filtered entity set"""
     entities: List[EntityNode]
     entity_types: Set[str]
     total_count: int
@@ -70,12 +68,12 @@ class FilteredEntities:
 
 class Neo4jEntityReader:
     """
-    Neo4j entities read with filter service
+    Neo4j Entity Reader with Filter Service
     
-    主want Features:
-    1. from Neo4j graph read所have nodes
-    2. filter出符合预定义entities type of nodes（Labels not只is GraphNode of nodes）
-    3. get每entities of related edges and 关联nodes information
+    Main features:
+    1. Read all nodes from Neo4j graph
+    2. Filter out nodes matching predefined entity types (nodes with labels other than just GraphNode)
+    3. Get related edges and associated node information for each entity
     """
     
     def __init__(self, api_key: Optional[str] = None):
@@ -96,13 +94,13 @@ class Neo4jEntityReader:
         initial_delay: float = 2.0
     ) -> T:
         """
-        带retry机制 of Neo4j call
+        Neo4j call with retry mechanism
         
         Args:
-            func: want execute of function（无parameters of lambda or callable）
-            operation_name: 操作名称，use于log
-            max_retries: maximum retry times count（默认3times，即最多尝试3times）
-            initial_delay: 初始延迟秒count
+            func: Function to execute (parameterless lambda or callable)
+            operation_name: Operation name for logging
+            max_retries: Maximum retry attempts (default 3)
+            initial_delay: Initial delay in seconds
             
         Returns:
             Call result
@@ -111,17 +109,17 @@ class Neo4jEntityReader:
     
     def get_all_nodes(self, graph_id: str) -> List[Dict[str, Any]]:
         """
-        get graph of所have nodes（带retry机制）
+        Get all nodes from graph (with retry mechanism)
         
         Args:
-            graph_id: graph ID
+            graph_id: Graph ID
             
         Returns:
-            nodes list
+            List of nodes
         """
-        logger.info(f"get graph {graph_id} of所have node...")
+        logger.info(f"Getting all nodes from graph {graph_id}...")
         
-        # use retry机制call Neo4j
+        # Use retry mechanism to call Neo4j
         def query_nodes():
             return self.neo4j.execute_query(
                 """
@@ -133,7 +131,7 @@ class Neo4jEntityReader:
         
         results = self._call_with_retry(
             func=query_nodes,
-            operation_name=f"get node(graph={graph_id})"
+            operation_name=f"get nodes(graph={graph_id})"
         )
         
         nodes_data = []
@@ -150,22 +148,22 @@ class Neo4jEntityReader:
                              if k not in ["uuid", "name", "graph_id", "created_at", "summary"]},
             })
         
-        logger.info(f"total get {len(nodes_data)} node")
+        logger.info(f"Total retrieved {len(nodes_data)} nodes")
         return nodes_data
     
     def get_all_edges(self, graph_id: str) -> List[Dict[str, Any]]:
         """
-        get graph of所have edges（带retry机制）
+        Get all edges from graph (with retry mechanism)
         
         Args:
-            graph_id: graph ID
+            graph_id: Graph ID
             
         Returns:
-            edges list
+            List of edges
         """
-        logger.info(f"get graph {graph_id} of所have edge...")
+        logger.info(f"Getting all edges from graph {graph_id}...")
         
-        # use retry机制call Neo4j
+        # Use retry mechanism to call Neo4j
         def query_edges():
             return self.neo4j.execute_query(
                 """
@@ -178,7 +176,7 @@ class Neo4jEntityReader:
         
         results = self._call_with_retry(
             func=query_edges,
-            operation_name=f"get edge(graph={graph_id})"
+            operation_name=f"get edges(graph={graph_id})"
         )
         
         edges_data = []
@@ -195,21 +193,21 @@ class Neo4jEntityReader:
                              if k not in ["uuid", "graph_id", "created_at"]},
             })
         
-        logger.info(f"total get {len(edges_data)} edge")
+        logger.info(f"Total retrieved {len(edges_data)} edges")
         return edges_data
     
     def get_node_edges(self, node_uuid: str) -> List[Dict[str, Any]]:
         """
-        get指定nodes of所have related edges（带retry机制）
+        Get all related edges for a specific node (with retry mechanism)
         
         Args:
-            node_uuid: nodes UUID
+            node_uuid: Node UUID
             
         Returns:
-            edges list
+            List of edges
         """
         try:
-            # use retry机制call Neo4j
+            # Use retry mechanism to call Neo4j
             def query_edges():
                 return self.neo4j.execute_query(
                     """
@@ -222,7 +220,7 @@ class Neo4jEntityReader:
             
             results = self._call_with_retry(
                 func=query_edges,
-                operation_name=f"get node edge(node={node_uuid[:8]}...)"
+                operation_name=f"get node edges(node={node_uuid[:8]}...)"
             )
             
             edges_data = []
@@ -240,7 +238,7 @@ class Neo4jEntityReader:
             
             return edges_data
         except Exception as e:
-            logger.warning(f"get node {node_uuid} of edge failed: {str(e)}")
+            logger.warning(f"Failed to get edges for node {node_uuid}: {str(e)}")
             return []
     
     def filter_defined_entities(
@@ -250,47 +248,47 @@ class Neo4jEntityReader:
         enrich_with_edges: bool = True
     ) -> FilteredEntities:
         """
-        filter出符合预定义entities type of nodes
+        Filter out nodes matching predefined entity types
         
-        filter逻辑：
-        - if nodes of Labels只have一个"GraphNode"，say明this entities not符合I们预定义 of type，跳过
-        - if nodes of Labels contains除"GraphNode"之外 of label，say明符合预定义type，保留
+        Filter logic:
+        - If node labels only contain "GraphNode", it doesn't match our predefined types, skip
+        - If node labels contain labels other than "GraphNode", it matches predefined type, keep
         
         Args:
-            graph_id: graph ID
-            defined_entity_types: 预定义 of entities type list（可选，if提供则只保留this些type）
-            enrich_with_edges: whether to get每entities of related edge informationrmation
+            graph_id: Graph ID
+            defined_entity_types: List of predefined entity types (optional, if provided only keep these types)
+            enrich_with_edges: Whether to get related edge information for each entity
             
         Returns:
-            FilteredEntities: filter后 of entities set
+            FilteredEntities: Filtered entity set
         """
-        logger.info(f"start filter graph {graph_id} of entity...")
+        logger.info(f"Starting to filter entities from graph {graph_id}...")
         
-        # get所have node
+        # Get all nodes
         all_nodes = self.get_all_nodes(graph_id)
         total_count = len(all_nodes)
         
-        # get所have edge（use于后续关联查找）
+        # Get all edges (for later association lookup)
         all_edges = self.get_all_edges(graph_id) if enrich_with_edges else []
         
-        # 构建node UUID到nodes count据 of映射
+        # Build node UUID to node data mapping
         node_map = {n["uuid"]: n for n in all_nodes}
         
-        # filter符合件 of entity
+        # Filter entities matching conditions
         filtered_entities = []
         entity_types_found = set()
         
         for node in all_nodes:
             labels = node.get("labels", [])
             
-            # filter逻辑：Labels must contains除"GraphNode"之外 of label
+            # Filter logic: Labels must contain labels other than "GraphNode"
             custom_labels = [l for l in labels if l not in ["Entity", "Node", "GraphNode"]]
             
             if not custom_labels:
-                # 只have默认label，跳过
+                # Only has default label, skip
                 continue
             
-            # if指定预定义type，check whether to匹配
+            # If predefined types specified, check for match
             if defined_entity_types:
                 matching_labels = [l for l in custom_labels if l in defined_entity_types]
                 if not matching_labels:
@@ -301,7 +299,7 @@ class Neo4jEntityReader:
             
             entity_types_found.add(entity_type)
             
-            # create entity node object
+            # Create entity node object
             entity = EntityNode(
                 uuid=node["uuid"],
                 name=node["name"],
@@ -310,7 +308,7 @@ class Neo4jEntityReader:
                 attributes=node["attributes"],
             )
             
-            # get related edge and node
+            # Get related edges and nodes
             if enrich_with_edges:
                 related_edges = []
                 related_node_uuids = set()
@@ -335,7 +333,7 @@ class Neo4jEntityReader:
                 
                 entity.related_edges = related_edges
                 
-                # get关联node of基本information
+                # Get basic info for related nodes
                 related_nodes = []
                 for related_uuid in related_node_uuids:
                     if related_uuid in node_map:
@@ -351,7 +349,7 @@ class Neo4jEntityReader:
             
             filtered_entities.append(entity)
         
-        logger.info(f"filter completed: Total node {total_count}, 符合件 {len(filtered_entities)}, "
+        logger.info(f"Filter completed: Total nodes {total_count}, matching {len(filtered_entities)}, "
                    f"entity types: {entity_types_found}")
         
         return FilteredEntities(
@@ -367,36 +365,36 @@ class Neo4jEntityReader:
         entity_uuid: str
     ) -> Optional[EntityNode]:
         """
-        get单entities and其complete上下文（edges and关联nodes，带retry机制）
+        Get single entity with complete context (edges and related nodes, with retry mechanism)
         
         Args:
-            graph_id: graph ID
-            entity_uuid: entities UUID
+            graph_id: Graph ID
+            entity_uuid: Entity UUID
             
         Returns:
             EntityNode or None
         """
         try:
-            # use retry机制get node
+            # Use retry mechanism to get node
             def query_node():
                 return self.neo4j.get_node_by_uuid(entity_uuid)
             
             node = self._call_with_retry(
                 func=query_node,
-                operation_name=f"get node详情(uuid={entity_uuid[:8]}...)"
+                operation_name=f"get node details(uuid={entity_uuid[:8]}...)"
             )
             
             if not node:
                 return None
             
-            # get node of edge
+            # Get node edges
             edges = self.get_node_edges(entity_uuid)
             
-            # get所have node use于关联查找
+            # Get all nodes for association lookup
             all_nodes = self.get_all_nodes(graph_id)
             node_map = {n["uuid"]: n for n in all_nodes}
             
-            # processing related edge and node
+            # Process related edges and nodes
             related_edges = []
             related_node_uuids = set()
             
@@ -418,7 +416,7 @@ class Neo4jEntityReader:
                     })
                     related_node_uuids.add(edge["source_node_uuid"])
             
-            # get关联node information
+            # Get related node information
             related_nodes = []
             for related_uuid in related_node_uuids:
                 if related_uuid in node_map:
@@ -442,7 +440,7 @@ class Neo4jEntityReader:
             )
             
         except Exception as e:
-            logger.error(f"get entity {entity_uuid} failed: {str(e)}")
+            logger.error(f"Failed to get entity {entity_uuid}: {str(e)}")
             return None
     
     def get_entities_by_type(
@@ -452,15 +450,15 @@ class Neo4jEntityReader:
         enrich_with_edges: bool = True
     ) -> List[EntityNode]:
         """
-        get指定type of所have entities
+        Get all entities of specified type
         
         Args:
-            graph_id: graph ID
-            entity_type: entities type（如 "Student", "PublicFigure" etc）
-            enrich_with_edges: whether to get related edge informationrmation
+            graph_id: Graph ID
+            entity_type: Entity type (e.g. "Student", "PublicFigure", etc.)
+            enrich_with_edges: Whether to get related edge information
             
         Returns:
-            entities list
+            List of entities
         """
         result = self.filter_defined_entities(
             graph_id=graph_id,

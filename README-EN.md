@@ -84,9 +84,13 @@ LLM_API_KEY=your_api_key
 LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 LLM_MODEL_NAME=qwen-plus
 
-# Zep Cloud Configuration
-# Free monthly quota is sufficient for simple usage: https://app.getzep.com/
-ZEP_API_KEY=your_zep_api_key
+# Neo4j Graph Database Configuration
+# Use Docker Compose to start local Neo4j: docker-compose up -d
+# Neo4j Browser: http://localhost:7474
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=mirofish123
+NEO4J_DATABASE=neo4j
 ```
 
 ### 2. Install Dependencies

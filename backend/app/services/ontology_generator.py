@@ -171,7 +171,7 @@ class OntologyGenerator:
         additional_context: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        generate本体定义
+        generateOntology definition
         
         Args:
             document_texts: 文档文本list
@@ -179,7 +179,7 @@ class OntologyGenerator:
             additional_context: 额外上下文
             
         Returns:
-            本体定义（entity_types, edge_typesetc）
+            Ontology definition（entity_types, edge_typesetc）
         """
         # 构建usermessage
         user_message = self._build_user_message(
@@ -346,10 +346,10 @@ class OntologyGenerator:
     
     def generate_python_code(self, ontology: Dict[str, Any]) -> str:
         """
-         will 本体定义convertforPython代码（class似ontology.py）
+         will Ontology definitionconvertforPython代码（class似ontology.py）
         
         Args:
-            ontology: 本体定义
+            ontology: Ontology definition
             
         Returns:
             Python代码string

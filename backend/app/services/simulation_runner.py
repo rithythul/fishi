@@ -375,7 +375,7 @@ class SimulationRunner:
                 cls._graph_memory_enabled[simulation_id] = True
                 logger.info(f"already启usegraph记忆update: simulation_id={simulation_id}, graph_id={graph_id}")
             except Exception as e:
-                logger.error(f"created graph记忆update器failed: {e}")
+                logger.error(f"Create graph记忆update器failed: {e}")
                 cls._graph_memory_enabled[simulation_id] = False
         else:
             cls._graph_memory_enabled[simulation_id] = False

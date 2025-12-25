@@ -1,6 +1,6 @@
 """
-图谱构建service
-interface2：use Neo4j 构建 Knowledge Graph
+Graph Builder Service
+API 2: Build Knowledge Graph with Neo4j
 """
 
 import os
@@ -23,7 +23,7 @@ logger = get_logger('fishi.graph_builder')
 
 @dataclass
 class GraphInfo:
-    """graphinformation"""
+    """Graph information"""
     graph_id: str
     node_count: int
     edge_count: int
@@ -40,8 +40,8 @@ class GraphInfo:
 
 class GraphBuilderService:
     """
-    图谱构建service
-    负责call Neo4j 构建知识图谱
+    Graph Builder Service
+    Responsible for calling Neo4j to build knowledge graphs
     """
     
     def __init__(self, api_key: Optional[str] = None):
@@ -71,20 +71,20 @@ class GraphBuilderService:
         batch_size: int = 3
     ) -> str:
         """
-        异步构建图谱
+        Build graph asynchronously
         
         Args:
-            text: 输入文本
-            ontology: 本体定义（come自interface1of输出）
-            graph_name: 图谱名称
-            chunk_size: 文本blockssize
-            chunk_overlap: blocks重叠size
-            batch_size: 每批sendofblocksquantity
+            text: Input text
+            ontology: Ontology definition (from API 1 output)
+            graph_name: Graph name
+            chunk_size: Text chunk size
+            chunk_overlap: Chunk overlap size
+            batch_size: Batch size for processing
             
         Returns:
-            任务ID
+            Task ID
         """
-        # create任务
+        # Create task
         task_id = self.task_manager.create_task(
             task_type="graph_build",
             metadata={
@@ -94,7 +94,7 @@ class GraphBuilderService:
             }
         )
         
-        # in后台线程 execute构建
+        # Execute build in background thread
         thread = threading.Thread(
             target=self._build_graph_worker,
             args=(task_id, text, ontology, graph_name, chunk_size, chunk_overlap, batch_size)
@@ -114,41 +114,41 @@ class GraphBuilderService:
         chunk_overlap: int,
         batch_size: int
     ):
-        """graph构建工作线程"""
+        """Graph build worker thread"""
         try:
             self.task_manager.update_task(
                 task_id,
                 status=TaskStatus.PROCESSING,
                 progress=5,
-                message="start buildinggraph..."
+                message="Starting graph build..."
             )
             
-            # 1. created graph
+            # 1. Create graph
             graph_id = self.create_graph(graph_name)
             self.task_manager.update_task(
                 task_id,
                 progress=10,
-                message=f"graphalreadycreate: {graph_id}"
+                message=f"Graph created: {graph_id}"
             )
             
-            # 2. setontology (create constraints and indexes)
+            # 2. Set ontology (create constraints and indexes)
             self.set_ontology(graph_id, ontology)
             self.task_manager.update_task(
                 task_id,
                 progress=15,
-                message="ontologyalreadyset"
+                message="Ontology set"
             )
             
-            # 3. 文本分blocks
+            # 3. Split text into chunks
             chunks = TextProcessor.split_text(text, chunk_size, chunk_overlap)
             total_chunks = len(chunks)
             self.task_manager.update_task(
                 task_id,
                 progress=20,
-                message=f"文本alreadysplitfor {total_chunks} blocks"
+                message=f"Text split into {total_chunks} chunks"
             )
             
-            # 4. 分批处理文本，提取实体并添加到图谱
+            # 4. Process text in batches, extract entities and add to graph
             self.add_text_batches(
                 graph_id, chunks, ontology, batch_size,
                 lambda msg, prog: self.task_manager.update_task(
@@ -158,11 +158,11 @@ class GraphBuilderService:
                 )
             )
             
-            # 5. getgraphinformation
+            # 5. Get graph information
             self.task_manager.update_task(
                 task_id,
                 progress=95,
-                message="getgraphinformation..."
+                message="Getting graph information..."
             )
             
             graph_information = self._get_graph_information(graph_id)
@@ -174,7 +174,7 @@ class GraphBuilderService:
                 message="Graph build complete!"
             )
             
-            # completed
+            # Complete
             self.task_manager.complete_task(task_id, {
                 "graph_id": graph_id,
                 "graph_information": graph_information.to_dict(),
@@ -189,7 +189,7 @@ class GraphBuilderService:
     
     def create_graph(self, name: str) -> str:
         """
-        create Neo4j graph（公开method）
+        Create Neo4j graph (public method)
         
         Args:
             name: Graph name
@@ -218,7 +218,7 @@ class GraphBuilderService:
     
     def set_ontology(self, graph_id: str, ontology: Dict[str, Any]):
         """
-        setgraphontology（公开method）
+        Set graph ontology (public method)
         
         In Neo4j, we store ontology as metadata and create indexes
         
@@ -264,7 +264,7 @@ class GraphBuilderService:
         progress_callback: Optional[Callable] = None
     ) -> List[str]:
         """
-        分批添加文本到graph，use LLM提取实体并添加到Neo4j
+        Add text to graph in batches, using LLM to extract entities and add to Neo4j
         
         Args:
             graph_id: Graph ID
@@ -407,7 +407,7 @@ class GraphBuilderService:
     
     def _get_graph_information(self, graph_id: str) -> GraphInfo:
         """
-        getgraphinformation
+        Get graph information
         
         Args:
             graph_id: Graph ID
@@ -454,13 +454,13 @@ class GraphBuilderService:
     
     def get_graph_data(self, graph_id: str) -> Dict[str, Any]:
         """
-        getcomplete图谱count据（containsdetailed informationrmation）
+        Get complete graph data (with detailed information)
         
         Args:
-            graph_id: 图谱ID
+            graph_id: Graph ID
             
         Returns:
-            containsnodesandedgesofdictionary
+            Dictionary containing nodes and edges
         """
         # Get all nodes
         nodes_result = self.neo4j.execute_query(
@@ -523,7 +523,7 @@ class GraphBuilderService:
     
     def delete_graph(self, graph_id: str):
         """
-        deletegraph
+        Delete graph
         
         Args:
             graph_id: Graph ID

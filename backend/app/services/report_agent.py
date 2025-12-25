@@ -1039,7 +1039,7 @@ youof任务is：
 ═══════════════════════════════════════════════════════════════
 
 【一section = minimumcontent单位】
-- 每sectionisreportofminimum分blocks单位
+- 每sectionisreportofminimum分chunks单位
 - ❌ 禁止insection内use任何 Markdown title（#、##、###、#### etc）
 - ❌ 禁止incontent开头添加section主title
 - ✅ sectiontitle由系统自动添加，you只需撰写纯正文content

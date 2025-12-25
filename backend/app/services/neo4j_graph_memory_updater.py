@@ -22,7 +22,7 @@ logger = get_logger('fishi.neo4j_graph_memory_updater')
 
 @dataclass
 class AgentActivity:
-    """Agent活动record"""
+    """Agent activity record"""
     platform: str           # twitter / reddit
     agent_id: int
     agent_name: str
@@ -33,12 +33,11 @@ class AgentActivity:
     
     def to_episode_text(self) -> str:
         """
-         will 活动convertforcansendgiveZepof文本description
+        Convert activity to text description for graph extraction
         
-        use自然语言descriptionformat，让Zepcan够from Extractentitiesandrelationships
-        not添加simulationrelatedof前缀，避免误导图谱update
+        Uses natural language description format for entity/relationship extraction
         """
-        # according tonot同ofactiontypegenerationnot同ofdescription
+        # Generate different descriptions for different action types
         action_descriptions = {
             "CREATE_POST": self._describe_create_post,
             "LIKE_POST": self._describe_like_post,
@@ -57,145 +56,145 @@ class AgentActivity:
         describe_func = action_descriptions.get(self.action_type, self._describe_generic)
         description = describe_func()
         
-        # 直接return "agent名称: 活动description" format，not添加simulation前缀
+        # Return "agent name: activity description" format
         return f"{self.agent_name}: {description}"
     
     def _describe_create_post(self) -> str:
         content = self.action_args.get("content", "")
         if content:
-            return f"发布一帖子：「{content}」"
-        return "发布一帖子"
+            return f"published a post: '{content}'"
+        return "published a post"
     
     def _describe_like_post(self) -> str:
-        """点赞帖子 - contains帖子原文and作者information"""
+        """Like post - includes post content and author info"""
         post_content = self.action_args.get("post_content", "")
         post_author = self.action_args.get("post_author_name", "")
         
         if post_content and post_author:
-            return f"点赞{post_author}of帖子：「{post_content}」"
+            return f"liked {post_author}'s post: '{post_content}'"
         elif post_content:
-            return f"点赞一帖子：「{post_content}」"
+            return f"liked a post: '{post_content}'"
         elif post_author:
-            return f"点赞{post_author}of一帖子"
-        return "点赞一帖子"
+            return f"liked a post by {post_author}"
+        return "liked a post"
     
     def _describe_dislike_post(self) -> str:
-        """踩帖子 - contains帖子原文and作者information"""
+        """Dislike post - includes post content and author info"""
         post_content = self.action_args.get("post_content", "")
         post_author = self.action_args.get("post_author_name", "")
         
         if post_content and post_author:
-            return f"踩{post_author}of帖子：「{post_content}」"
+            return f"disliked {post_author}'s post: '{post_content}'"
         elif post_content:
-            return f"踩一帖子：「{post_content}」"
+            return f"disliked a post: '{post_content}'"
         elif post_author:
-            return f"踩{post_author}of一帖子"
-        return "踩一帖子"
+            return f"disliked a post by {post_author}"
+        return "disliked a post"
     
     def _describe_repost(self) -> str:
-        """转发帖子 - contains原帖contentand作者information"""
+        """Repost - includes original content and author info"""
         original_content = self.action_args.get("original_content", "")
         original_author = self.action_args.get("original_author_name", "")
         
         if original_content and original_author:
-            return f"转发{original_author}of帖子：「{original_content}」"
+            return f"reposted {original_author}'s post: '{original_content}'"
         elif original_content:
-            return f"转发一帖子：「{original_content}」"
+            return f"reposted a post: '{original_content}'"
         elif original_author:
-            return f"转发{original_author}of一帖子"
-        return "转发一帖子"
+            return f"reposted a post by {original_author}"
+        return "reposted a post"
     
     def _describe_quote_post(self) -> str:
-        """引use帖子 - contains原帖content、作者informationand引use评论"""
+        """Quote post - includes original content, author info and quote comment"""
         original_content = self.action_args.get("original_content", "")
         original_author = self.action_args.get("original_author_name", "")
         quote_content = self.action_args.get("quote_content", "") or self.action_args.get("content", "")
         
         base = ""
         if original_content and original_author:
-            base = f"引use{original_author}of帖子「{original_content}」"
+            base = f"quoted {original_author}'s post '{original_content}'"
         elif original_content:
-            base = f"引use一帖子「{original_content}」"
+            base = f"quoted a post '{original_content}'"
         elif original_author:
-            base = f"引use{original_author}of一帖子"
+            base = f"quoted a post by {original_author}"
         else:
-            base = "引use一帖子"
+            base = "quoted a post"
         
         if quote_content:
-            base += f"，并评论道：「{quote_content}」"
+            base += f", commenting: '{quote_content}'"
         return base
     
     def _describe_follow(self) -> str:
-        """关注user - contains被关注userof名称"""
+        """Follow user - includes target user name"""
         target_user_name = self.action_args.get("target_user_name", "")
         
         if target_user_name:
-            return f"关注user「{target_user_name}」"
-        return "关注一user"
+            return f"followed user '{target_user_name}'"
+        return "followed a user"
     
     def _describe_create_comment(self) -> str:
-        """发表评论 - contains评论contentand所评论of帖子information"""
+        """Create comment - includes comment content and post info"""
         content = self.action_args.get("content", "")
         post_content = self.action_args.get("post_content", "")
         post_author = self.action_args.get("post_author_name", "")
         
         if content:
             if post_content and post_author:
-                return f"in{post_author}of帖子「{post_content}」下评论道：「{content}」"
+                return f"commented on {post_author}'s post '{post_content}': '{content}'"
             elif post_content:
-                return f"in帖子「{post_content}」下评论道：「{content}」"
+                return f"commented on post '{post_content}': '{content}'"
             elif post_author:
-                return f"in{post_author}of帖子下评论道：「{content}」"
-            return f"评论道：「{content}」"
-        return "发表评论"
+                return f"commented on {post_author}'s post: '{content}'"
+            return f"commented: '{content}'"
+        return "posted a comment"
     
     def _describe_like_comment(self) -> str:
-        """点赞评论 - contains评论contentand作者information"""
+        """Like comment - includes comment content and author info"""
         comment_content = self.action_args.get("comment_content", "")
         comment_author = self.action_args.get("comment_author_name", "")
         
         if comment_content and comment_author:
-            return f"点赞{comment_author}of评论：「{comment_content}」"
+            return f"liked {comment_author}'s comment: '{comment_content}'"
         elif comment_content:
-            return f"点赞一评论：「{comment_content}」"
+            return f"liked a comment: '{comment_content}'"
         elif comment_author:
-            return f"点赞{comment_author}of一评论"
-        return "点赞一评论"
+            return f"liked a comment by {comment_author}"
+        return "liked a comment"
     
     def _describe_dislike_comment(self) -> str:
-        """踩评论 - contains评论contentand作者information"""
+        """Dislike comment - includes comment content and author info"""
         comment_content = self.action_args.get("comment_content", "")
         comment_author = self.action_args.get("comment_author_name", "")
         
         if comment_content and comment_author:
-            return f"踩{comment_author}of评论：「{comment_content}」"
+            return f"disliked {comment_author}'s comment: '{comment_content}'"
         elif comment_content:
-            return f"踩一评论：「{comment_content}」"
+            return f"disliked a comment: '{comment_content}'"
         elif comment_author:
-            return f"踩{comment_author}of一评论"
-        return "踩一评论"
+            return f"disliked a comment by {comment_author}"
+        return "disliked a comment"
     
     def _describe_search(self) -> str:
-        """search帖子 - containssearch关key词"""
+        """Search posts - includes search query"""
         query = self.action_args.get("query", "") or self.action_args.get("keyword", "")
-        return f"search「{query}」" if query else "进行search"
+        return f"searched for '{query}'" if query else "performed a search"
     
     def _describe_search_user(self) -> str:
-        """searchuser - containssearch关key词"""
+        """Search user - includes search query"""
         query = self.action_args.get("query", "") or self.action_args.get("username", "")
-        return f"searchuser「{query}」" if query else "searchuser"
+        return f"searched for user '{query}'" if query else "searched for users"
     
     def _describe_mute(self) -> str:
-        """屏蔽user - contains被屏蔽userof名称"""
+        """Mute user - includes target user name"""
         target_user_name = self.action_args.get("target_user_name", "")
         
         if target_user_name:
-            return f"屏蔽user「{target_user_name}」"
-        return "屏蔽一user"
+            return f"muted user '{target_user_name}'"
+        return "muted a user"
     
     def _describe_generic(self) -> str:
-        # to于not知ofactiontype，generation通usedescription
-        return f"execute{self.action_type}操作"
+        # For unknown action types, generate generic description
+        return f"performed {self.action_type} action"
 
 
 class Neo4jGraphMemoryUpdater:
@@ -262,7 +261,7 @@ class Neo4jGraphMemoryUpdater:
         logger.info(f"Neo4jGraphMemoryUpdater initialized: graph_id={graph_id}, batch_size={self.BATCH_SIZE}")
     
     def start(self):
-        """start后台工作线程"""
+        """Start background worker thread"""
         if self._running:
             return
         
@@ -270,22 +269,22 @@ class Neo4jGraphMemoryUpdater:
         self._worker_thread = threading.Thread(
             target=self._worker_loop,
             daemon=True,
-            name=f"ZepMemoryUpdater-{self.graph_id[:8]}"
+            name=f"Neo4jMemoryUpdater-{self.graph_id[:8]}"
         )
         self._worker_thread.start()
-        logger.info(f"ZepGraphMemoryUpdater alreadystart: graph_id={self.graph_id}")
+        logger.info(f"Neo4jGraphMemoryUpdater started: graph_id={self.graph_id}")
     
     def stop(self):
-        """stop后台工作线程"""
+        """Stop background worker thread"""
         self._running = False
         
-        # send剩余of活动
+        # Send remaining activities
         self._flush_remaining()
         
         if self._worker_thread and self._worker_thread.is_alive():
             self._worker_thread.join(timeout=10)
         
-        logger.info(f"ZepGraphMemoryUpdater alreadystop: graph_id={self.graph_id}, "
+        logger.info(f"Neo4jGraphMemoryUpdater stopped: graph_id={self.graph_id}, "
                    f"total_activities={self._total_activities}, "
                    f"batches_sent={self._total_sent}, "
                    f"items_sent={self._total_items_sent}, "
@@ -294,43 +293,43 @@ class Neo4jGraphMemoryUpdater:
     
     def add_activity(self, activity: AgentActivity):
         """
-        添加一agent活动到队列
+        Add an agent activity to the queue
         
-        所havehave意义of行for都will被添加到队列，package括：
-        - CREATE_POST（发帖）
-        - CREATE_COMMENT（评论）
-        - QUOTE_POST（引use帖子）
-        - SEARCH_POSTS（search帖子）
-        - SEARCH_USER（searchuser）
-        - LIKE_POST/DISLIKE_POST（点赞/踩帖子）
-        - REPOST（转发）
-        - FOLLOW（关注）
-        - MUTE（屏蔽）
-        - LIKE_COMMENT/DISLIKE_COMMENT（点赞/踩评论）
+        All meaningful actions will be added to queue, including:
+        - CREATE_POST (post)
+        - CREATE_COMMENT (comment)
+        - QUOTE_POST (quote post)
+        - SEARCH_POSTS (search posts)
+        - SEARCH_USER (search user)
+        - LIKE_POST/DISLIKE_POST (like/dislike post)
+        - REPOST (repost)
+        - FOLLOW (follow)
+        - MUTE (mute)
+        - LIKE_COMMENT/DISLIKE_COMMENT (like/dislike comment)
         
-        action_args willcontainscompleteof上下文information（如帖子原文、user名etc）。
+        action_args will contain complete context info (post content, user names, etc.)
         
         Args:
-            activity: Agent活动record
+            activity: Agent activity record
         """
-        # 跳过DO_NOTHINGtypeof活动
+        # Skip DO_NOTHING type activities
         if activity.action_type == "DO_NOTHING":
             self._skipped_count += 1
             return
         
         self._activity_queue.put(activity)
         self._total_activities += 1
-        logger.debug(f"添加活动到Zep队列: {activity.agent_name} - {activity.action_type}")
+        logger.debug(f"Added activity to queue: {activity.agent_name} - {activity.action_type}")
     
     def add_activity_from_dict(self, data: Dict[str, Any], platform: str):
         """
-        fromdictionarycount据添加活动
+        Add activity from dictionary data
         
         Args:
-            data: fromactions.jsonlparseofdictionarycount据
-            platform: 平台名称 (twitter/reddit)
+            data: Dictionary data parsed from actions.jsonl
+            platform: Platform name (twitter/reddit)
         """
-        # 跳过事件typeof目
+        # Skip event type entries
         if "event_type" in data:
             return
         
@@ -347,34 +346,34 @@ class Neo4jGraphMemoryUpdater:
         self.add_activity(activity)
     
     def _worker_loop(self):
-        """后台工作循环 - Byplatform批量send活动到Zep"""
+        """Background worker loop - batch sends activities to Neo4j by platform"""
         while self._running or not self._activity_queue.empty():
             try:
-                # 尝试from队列get活动（timeout1秒）
+                # Try to get activity from queue (timeout 1 second)
                 try:
                     activity = self._activity_queue.get(timeout=1)
                     
-                    #  will 活动添加到to应platformof缓冲区
+                    # Add activity to corresponding platform buffer
                     platform = activity.platform.lower()
                     with self._buffer_lock:
                         if platform not in self._platform_buffers:
                             self._platform_buffers[platform] = []
                         self._platform_buffers[platform].append(activity)
                         
-                        # check该platformwhether toreached批量size
+                        # Check if platform has reached batch size
                         if len(self._platform_buffers[platform]) >= self.BATCH_SIZE:
                             batch = self._platform_buffers[platform][:self.BATCH_SIZE]
                             self._platform_buffers[platform] = self._platform_buffers[platform][self.BATCH_SIZE:]
-                            # 释放锁后再send
+                            # Release lock before sending
                             self._send_batch_activities(batch, platform)
-                            # send间隔，避免request过快
+                            # Send interval to avoid request overload
                             time.sleep(self.SEND_INTERVAL)
                     
                 except Empty:
                     pass
                     
             except Exception as e:
-                logger.error(f"工作循环异常: {e}")
+                logger.error(f"Worker loop error: {e}")
                 time.sleep(1)
     
     def _send_batch_activities(self, activities: List[AgentActivity], platform: str):
@@ -508,8 +507,8 @@ class Neo4jGraphMemoryUpdater:
             )
     
     def _flush_remaining(self):
-        """send队列and缓冲区 剩余of活动"""
-        # 首firstprocessing队列 剩余of活动，添加到缓冲区
+        """Send remaining activities in queue and buffers"""
+        # First process remaining activities in queue, add to buffers
         while not self._activity_queue.empty():
             try:
                 activity = self._activity_queue.get_nowait()
@@ -521,31 +520,31 @@ class Neo4jGraphMemoryUpdater:
             except Empty:
                 break
         
-        # thensend各platform缓冲区 剩余of活动（即使not足BATCH_SIZE）
+        # Then send remaining activities in each platform buffer (even if less than BATCH_SIZE)
         with self._buffer_lock:
             for platform, buffer in self._platform_buffers.items():
                 if buffer:
-                    logger.info(f"send{platform}platform剩余of {len(buffer)} 活动")
+                    logger.info(f"Sending remaining {len(buffer)} {platform} activities")
                     self._send_batch_activities(buffer, platform)
-            # 清空所have缓冲区
+            # Clear all buffers
             for platform in self._platform_buffers:
                 self._platform_buffers[platform] = []
     
     def get_stats(self) -> Dict[str, Any]:
-        """getstatisticsinformation"""
+        """Get statistics"""
         with self._buffer_lock:
             buffer_sizes = {p: len(b) for p, b in self._platform_buffers.items()}
         
         return {
             "graph_id": self.graph_id,
             "batch_size": self.BATCH_SIZE,
-            "total_activities": self._total_activities,  # 添加到队列of活动total
-            "batches_sent": self._total_sent,            # successsendof批timescount
-            "items_sent": self._total_items_sent,        # successsendof活动count
-            "failed_count": self._failed_count,          # sendfailedof批timescount
-            "skipped_count": self._skipped_count,        # 被filter跳过of活动count（DO_NOTHING）
+            "total_activities": self._total_activities,  # Total activities added to queue
+            "batches_sent": self._total_sent,            # Number of batches successfully sent
+            "items_sent": self._total_items_sent,        # Number of activities successfully sent
+            "failed_count": self._failed_count,          # Number of failed batch sends
+            "skipped_count": self._skipped_count,        # Number of filtered activities (DO_NOTHING)
             "queue_size": self._activity_queue.qsize(),
-            "buffer_sizes": buffer_sizes,                # 各platform缓冲区size
+            "buffer_sizes": buffer_sizes,                # Size of each platform buffer
             "running": self._running,
         }
 
@@ -591,20 +590,20 @@ class Neo4jGraphMemoryManager:
     
     @classmethod
     def stop_updater(cls, simulation_id: str):
-        """stop并移除simulationofupdate器"""
+        """Stop and remove simulation updater"""
         with cls._lock:
             if simulation_id in cls._updaters:
                 cls._updaters[simulation_id].stop()
                 del cls._updaters[simulation_id]
-                logger.info(f"alreadystopgraph记忆update器: simulation_id={simulation_id}")
+                logger.info(f"Stopped graph memory updater: simulation_id={simulation_id}")
     
-    # 防止 stop_all 重复callof标志
+    # Flag to prevent duplicate stop_all calls
     _stop_all_done = False
     
     @classmethod
     def stop_all(cls):
-        """stop所haveupdate器"""
-        # 防止重复call
+        """Stop all updaters"""
+        # Prevent duplicate calls
         if cls._stop_all_done:
             return
         cls._stop_all_done = True
@@ -615,13 +614,13 @@ class Neo4jGraphMemoryManager:
                     try:
                         updater.stop()
                     except Exception as e:
-                        logger.error(f"stopupdate器failed: simulation_id={simulation_id}, error={e}")
+                        logger.error(f"Failed to stop updater: simulation_id={simulation_id}, error={e}")
                 cls._updaters.clear()
-            logger.info("alreadystop所havegraph记忆update器")
+            logger.info("Stopped all graph memory updaters")
     
     @classmethod
     def get_all_stats(cls) -> Dict[str, Dict[str, Any]]:
-        """get所haveupdate器ofstatisticsinformation"""
+        """Get statistics for all updaters"""
         return {
             sim_id: updater.get_stats() 
             for sim_id, updater in cls._updaters.items()

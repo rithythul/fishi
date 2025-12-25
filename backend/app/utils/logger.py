@@ -13,7 +13,7 @@ from logging.handlers import RotatingFileHandler
 LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
 
 
-def setup_logger(name: str = 'mirofish', level: int = logging.DEBUG) -> logging.Logger:
+def setup_logger(name: str = 'fishi', level: int = logging.DEBUG) -> logging.Logger:
     """
     setlog器
     
@@ -72,7 +72,7 @@ def setup_logger(name: str = 'mirofish', level: int = logging.DEBUG) -> logging.
     return logger
 
 
-def get_logger(name: str = 'mirofish') -> logging.Logger:
+def get_logger(name: str = 'fishi') -> logging.Logger:
     """
     getlog器（ifnot存in则create）
     

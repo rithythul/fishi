@@ -4,7 +4,7 @@
     <nav class="navbar">
       <div class="nav-brand">FISHI</div>
       <div class="nav-links">
-        <a href="https://github.com/666ghj/MiroFish" target="_blank" class="github-link">
+        <a href="https://github.com/rithythul/FISHI" target="_blank" class="github-link">
           Visit our GitHub <span class="arrow">↗</span>
         </a>
       </div>

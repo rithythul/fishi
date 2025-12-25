@@ -197,7 +197,7 @@ class GraphBuilderService:
         Returns:
             Graph ID
         """
-        graph_id = f"mirofish_{uuid.uuid4().hex[:16]}"
+        graph_id = f"fishi_{uuid.uuid4().hex[:16]}"
         
         # Create graph metadata node
         self.neo4j.create_node(

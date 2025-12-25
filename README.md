@@ -19,112 +19,115 @@
 
 </div>
 
-## ⚡ 项目概述
+## ⚡ Overview
 
-**MiroFish** 是一款基于多智能体技术的新一代 AI 预测引擎。通过提取现实世界的种子信息（如突发新闻、政策草案、金融信号），自动构建出高保真的平行数字世界。在此空间内，成千上万个具备独立人格、长期记忆与行为逻辑的智能体进行自由交互与社会演化。你可透过「上帝视角」动态注入变量，精准推演未来走向——**让未来在数字沙盘中预演，助决策在百战模拟后胜出**。
+**MiroFish** is a next-generation AI prediction engine powered by multi-agent technology. By extracting seed information from the real world (such as breaking news, policy drafts, or financial signals), it automatically constructs a high-fidelity parallel digital world. Within this space, thousands of intelligent agents with independent personalities, long-term memory, and behavioral logic freely interact and undergo social evolution. You can inject variables dynamically from a "God's-eye view" to precisely deduce future trajectories — **rehearse the future in a digital sandbox, and win decisions after countless simulations**.
 
-> 你只需：上传种子材料（数据分析报告或者有趣的小说故事），并用自然语言描述预测需求</br>
-> MiroFish 将返回：一份详尽的预测报告，以及一个可深度交互的高保真数字世界
+> You only need to: Upload seed materials (data analysis reports or interesting novel stories) and describe your prediction requirements in natural language</br>
+> MiroFish will return: A detailed prediction report and a deeply interactive high-fidelity digital world
 
-### 我们的愿景
+### Our Vision
 
-MiroFish 致力于打造映射现实的群体智能镜像，通过捕捉个体互动引发的群体涌现，突破传统预测的局限：
+MiroFish is dedicated to creating a swarm intelligence mirror that maps reality. By capturing the collective emergence triggered by individual interactions, we break through the limitations of traditional prediction:
 
-- **于宏观**：我们是决策者的预演实验室，让政策与公关在零风险中试错
-- **于微观**：我们是个人用户的创意沙盘，无论是推演小说结局还是探索脑洞，皆可有趣、好玩、触手可及
+- **At the Macro Level**: We are a rehearsal laboratory for decision-makers, allowing policies and public relations to be tested at zero risk
+- **At the Micro Level**: We are a creative sandbox for individual users — whether deducing novel endings or exploring imaginative scenarios, everything can be fun, playful, and accessible
 
-从严肃预测到趣味仿真，我们让每一个如果都能看见结果，让预测万物成为可能。
+From serious predictions to playful simulations, we let every "what if" see its outcome, making it possible to predict anything.
 
-## 🎬 演示视频
-
+## 🎬 Demo Videos
 
 <div align="center">
 <a href="https://www.bilibili.com/video/BV1VYBsBHEMY/"><img src="./static/image/武大模拟演示封面.png" alt="MiroFish Demo Video" width="75%"/></a>
 
-使用微舆BettaFish生成的《武大舆情报告》进行预测的完整演示视频
+Complete demo video for prediction using BettaFish-generated "Wuhan University Public Opinion Report"
 </div>
 
-> 红楼梦结局模拟推演演示视频、金融方向预测示例演示视频等陆续更新中...
+> More demo videos coming soon: "Dream of the Red Chamber" ending simulation, financial prediction examples...
 
-## 🔄 工作流程
+## 🔄 Workflow
 
-1. **图谱构建**：现实种子提取 & 个体与群体记忆注入 & GraphRAG构建
-2. **环境搭建**：实体关系抽取 & 人设生成 & 环境配置Agent注入仿真参数
-3. **开始模拟**：双平台并行模拟 & 自动解析预测需求 & 动态更新时序记忆
-4. **报告生成**：ReportAgent拥有丰富的工具集与模拟后环境进行深度交互
-5. **深度互动**：与模拟世界中的任意一位进行对话 & 与ReportAgent进行对话
+1. **Graph Building**: Seed extraction & Individual/collective memory injection & GraphRAG construction
+2. **Environment Setup**: Entity relationship extraction & Persona generation & Agent configuration injection
+3. **Simulation**: Dual-platform parallel simulation & Auto-parse prediction requirements & Dynamic temporal memory updates
+4. **Report Generation**: ReportAgent with rich toolset for deep interaction with post-simulation environment
+5. **Deep Interaction**: Chat with any agent in the simulated world & Interact with ReportAgent
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 前置要求
+### Prerequisites
 
-> 注：MiroFish在Mac环境下完成开发与测试，Windows兼容性未知，测试中
+> Note: MiroFish was developed and tested on Mac. Windows compatibility is unknown and currently under testing.
 
-| 工具 | 版本要求 | 说明 | 安装检查 |
-|------|---------|------|---------|
-| **Node.js** | 18+ | 前端运行环境，包含 npm | `node -v` |
-| **Python** | 3.11+ | 后端运行环境 | `python --version` |
-| **uv** | 最新版 | Python 包管理器 | `uv --version` |
+| Tool | Version | Description | Check Installation |
+|------|---------|-------------|-------------------|
+| **Node.js** | 18+ | Frontend runtime, includes npm | `node -v` |
+| **Python** | 3.11+ | Backend runtime | `python --version` |
+| **uv** | Latest | Python package manager | `uv --version` |
 
-### 1. 配置环境变量
+### 1. Configure Environment Variables
 
 ```bash
-# 复制示例配置文件
+# Copy the example configuration file
 cp .env.example .env
 
-# 编辑 .env 文件，填入必要的 API 密钥
+# Edit the .env file and fill in the required API keys
 ```
 
-**必需的环境变量：**
+**Required Environment Variables:**
 
 ```env
-# LLM API配置（支持 OpenAI SDK 格式的任意 LLM）
-# 推荐使用阿里百炼平台qwen-plus模型：https://bailian.console.aliyun.com/
-# 注意消耗较大，可先进行小于40轮的模拟尝试
+# LLM API Configuration (supports any LLM with OpenAI SDK format)
+# Recommended: Alibaba Qwen-plus model via Bailian Platform: https://bailian.console.aliyun.com/
+# High consumption, try simulations with fewer than 40 rounds first
 LLM_API_KEY=your_api_key
 LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 LLM_MODEL_NAME=qwen-plus
 
-# Zep Cloud 配置
-# 每月免费额度即可支撑简单使用：https://app.getzep.com/
-ZEP_API_KEY=your_zep_api_key
+# Neo4j Graph Database Configuration
+# Use Docker Compose to start local Neo4j: docker-compose up -d
+# Neo4j Browser: http://localhost:7474
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=mirofish123
+NEO4J_DATABASE=neo4j
 ```
 
-### 2. 安装依赖
+### 2. Install Dependencies
 
 ```bash
-# 一键安装所有依赖（根目录 + 前端 + 后端）
+# One-click installation of all dependencies (root + frontend + backend)
 npm run setup:all
 ```
 
-或者分步安装：
+Or install step by step:
 
 ```bash
-# 安装 Node 依赖（根目录 + 前端）
+# Install Node dependencies (root + frontend)
 npm run setup
 
-# 安装 Python 依赖（自动创建虚拟环境）
+# Install Python dependencies (auto-creates virtual environment)
 npm run setup:backend
 ```
 
-### 3. 启动服务
+### 3. Start Services
 
 ```bash
-# 同时启动前后端（在项目根目录执行）
+# Start both frontend and backend (run from project root)
 npm run dev
 ```
 
-**服务地址：**
-- 前端：`http://localhost:3000`
-- 后端 API：`http://localhost:5001`
+**Service URLs:**
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:5001`
 
-**单独启动：**
+**Start Individually:**
 
 ```bash
-npm run backend   # 仅启动后端
-npm run frontend  # 仅启动前端
+npm run backend   # Start backend only
+npm run frontend  # Start frontend only
 ```
 
-## 📄 致谢
+## 📄 Acknowledgments
 
-MiroFish 的核心仿真引擎由 **[OASIS](https://github.com/camel-ai/oasis)** 驱动。OASIS 是由 [CAMEL-AI](https://github.com/camel-ai) 团队开发的高性能社交媒体模拟框架，支持百万级智能体交互仿真，为 MiroFish 的群体智能涌现提供了坚实的技术基础。我们衷心感谢 CAMEL-AI 团队的开源贡献！
+MiroFish's core simulation engine is powered by **[OASIS (Open Agent Social Interaction Simulations)](https://github.com/camel-ai/oasis)**. OASIS is a high-performance social media simulation framework developed by the [CAMEL-AI](https://github.com/camel-ai) team, supporting million-scale agent interaction simulations, providing a solid technical foundation for MiroFish's swarm intelligence emergence. We sincerely thank the CAMEL-AI team for their open-source contributions!

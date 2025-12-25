@@ -22,7 +22,7 @@ from ..config import Config
 from ..utils.logger import get_logger
 from .neo4j_entity_reader import EntityNode, Neo4jEntityReader as ZepEntityReader
 
-logger = get_logger('mirofish.simulation_config')
+logger = get_logger('fishi.simulation_config')
 
 #  国作息timeconfiguration（北京time）
 CHINA_TIMEZONE_CONFIG = {

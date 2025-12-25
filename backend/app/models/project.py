@@ -1,144 +1,121 @@
 """
-items上下文管理
-use于inservice端持久化itemsstatus，避免前端ininterface间传递大量count据
+Project context management
+Used for server-side persistent project status, avoiding passing large amounts of data between frontend interfaces
 """
 
 import os
 import json
 import uuid
 import shutil
-from datetime import datetime
-from typing import Dict, Any, List, Optional
 from enum import Enum
+from pathlib import Path
+from typing import Optional, List, Dict, Any
+from datetime import datetime
 from dataclasses import dataclass, field, asdict
-from ..config import Config
 
 
 class ProjectStatus(str, Enum):
-    """itemsstatus"""
-    CREATED = "created"              # 刚create，filealreadyupload
-    ONTOLOGY_GENERATED = "ontology_generated"  # ontologyalreadygeneration
-    GRAPH_BUILDING = "graph_building"    # graph构建 
-    GRAPH_COMPLETED = "graph_completed"  # graph构建completed
-    FAILED = "failed"                # failed
+    """Project status enumeration"""
+    CREATED = "created"                # Just created, files already uploaded
+    ONTOLOGY_GENERATED = "ontology_generated"  # Ontology has been generated
+    GRAPH_BUILDING = "graph_building"   # Graph building in progress
+    GRAPH_BUILT = "graph_built"         # Graph building completed
+    GRAPH_COMPLETED = "graph_completed" # Graph completed
+    SIMULATION_READY = "simulation_ready"
+    SIMULATION_RUNNING = "simulation_running"
+    SIMULATION_COMPLETED = "simulation_completed"
+    REPORT_GENERATING = "report_generating"
+    REPORT_COMPLETED = "report_completed"
 
 
 @dataclass
 class Project:
-    """Data model"""
+    """Project data class"""
+    # Basic information
     project_id: str
     name: str
     status: ProjectStatus
     created_at: str
     updated_at: str
     
-    # fileinformation
-    files: List[Dict[str, str]] = field(default_factory=list)  # [{filename, path, size}]
-    total_text_length: int = 0
-    
-    # ontologyinformation（interface1generation后填充）
-    ontology: Optional[Dict[str, Any]] = None
+    # Ontology information (populated after API 1 generation)
+    ontology: Optional[Dict] = None
     analysis_summary: Optional[str] = None
+    total_text_length: Optional[int] = None
     
-    # graphinformation（interface2completed后填充）
+    # Graph information (populated after API 2 completion)
     graph_id: Optional[str] = None
-    graph_build_task_id: Optional[str] = None
+    node_count: Optional[int] = None
+    edge_count: Optional[int] = None
     
-    # configuration
+    # Simulation requirement
     simulation_requirement: Optional[str] = None
-    chunk_size: int = 500
-    chunk_overlap: int = 50
+    additional_context: Optional[str] = None
     
-    # errorinformation
-    error: Optional[str] = None
+    # Simulation related
+    simulation_id: Optional[str] = None
+    simulation_config: Optional[Dict] = None
+    
+    # File related
+    files: List[Dict] = field(default_factory=list)
     
     def to_dict(self) -> Dict[str, Any]:
-        """convertfordictionary"""
-        return {
-            "project_id": self.project_id,
-            "name": self.name,
-            "status": self.status.value if isinstance(self.status, ProjectStatus) else self.status,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
-            "files": self.files,
-            "total_text_length": self.total_text_length,
-            "ontology": self.ontology,
-            "analysis_summary": self.analysis_summary,
-            "graph_id": self.graph_id,
-            "graph_build_task_id": self.graph_build_task_id,
-            "simulation_requirement": self.simulation_requirement,
-            "chunk_size": self.chunk_size,
-            "chunk_overlap": self.chunk_overlap,
-            "error": self.error
-        }
+        """Convert to dictionary"""
+        result = asdict(self)
+        # Convert status to string
+        result['status'] = self.status.value
+        return result
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Project':
-        """fromdictionarycreate"""
-        status = data.get('status', 'created')
-        if isinstance(status, str):
-            status = ProjectStatus(status)
-        
-        return cls(
-            project_id=data['project_id'],
-            name=data.get('name', 'Unnamed Project'),
-            status=status,
-            created_at=data.get('created_at', ''),
-            updated_at=data.get('updated_at', ''),
-            files=data.get('files', []),
-            total_text_length=data.get('total_text_length', 0),
-            ontology=data.get('ontology'),
-            analysis_summary=data.get('analysis_summary'),
-            graph_id=data.get('graph_id'),
-            graph_build_task_id=data.get('graph_build_task_id'),
-            simulation_requirement=data.get('simulation_requirement'),
-            chunk_size=data.get('chunk_size', 500),
-            chunk_overlap=data.get('chunk_overlap', 50),
-            error=data.get('error')
-        )
+        """Create from dictionary"""
+        # Convert status string to enum
+        if isinstance(data.get('status'), str):
+            data['status'] = ProjectStatus(data['status'])
+        return cls(**data)
 
 
 class ProjectManager:
-    """items管理器 - 负责itemsof持久化存储andretrieval"""
+    """Project manager - responsible for project persistence and retrieval"""
     
-    # items存储根directory
-    PROJECTS_DIR = os.path.join(Config.UPLOAD_FOLDER, 'projects')
+    # Project storage root directory
+    PROJECTS_DIR = Path(__file__).parent.parent.parent / "projects"
     
     @classmethod
     def _ensure_projects_dir(cls):
-        """确保itemsdirectory存in"""
-        os.makedirs(cls.PROJECTS_DIR, exist_ok=True)
+        """Ensure projects directory exists"""
+        cls.PROJECTS_DIR.mkdir(parents=True, exist_ok=True)
     
     @classmethod
-    def _get_project_dir(cls, project_id: str) -> str:
-        """getitemsdirectory路径"""
-        return os.path.join(cls.PROJECTS_DIR, project_id)
+    def _get_project_dir(cls, project_id: str) -> Path:
+        """Get project directory path"""
+        return cls.PROJECTS_DIR / project_id
     
     @classmethod
-    def _get_project_meta_path(cls, project_id: str) -> str:
-        """getitems元count据file路径"""
-        return os.path.join(cls._get_project_dir(project_id), 'project.json')
+    def _get_project_metadata_path(cls, project_id: str) -> Path:
+        """Get project metadata file path"""
+        return cls._get_project_dir(project_id) / "metadata.json"
     
     @classmethod
-    def _get_project_files_dir(cls, project_id: str) -> str:
-        """getitemsfile存储directory"""
-        return os.path.join(cls._get_project_dir(project_id), 'files')
+    def _get_project_files_dir(cls, project_id: str) -> Path:
+        """Get project files storage directory"""
+        return cls._get_project_dir(project_id) / "files"
     
     @classmethod
-    def _get_project_text_path(cls, project_id: str) -> str:
-        """getitemsExtract文本存储路径"""
-        return os.path.join(cls._get_project_dir(project_id), 'extracted_text.txt')
+    def _get_extracted_text_path(cls, project_id: str) -> Path:
+        """Get extracted text storage path"""
+        return cls._get_project_dir(project_id) / "extracted_text.txt"
     
     @classmethod
     def create_project(cls, name: str = "Unnamed Project") -> Project:
         """
-        create新items
+        Create new project
         
         Args:
-            name: items名称
+            name: Project name
             
         Returns:
-            新createofProjectobject
+            Newly created Project object
         """
         cls._ensure_projects_dir()
         
@@ -153,67 +130,67 @@ class ProjectManager:
             updated_at=now
         )
         
-        # createitemsdirectorystructure
+        # Create project directory structure
         project_dir = cls._get_project_dir(project_id)
         files_dir = cls._get_project_files_dir(project_id)
         os.makedirs(project_dir, exist_ok=True)
         os.makedirs(files_dir, exist_ok=True)
         
-        # saveitems元count据
+        # Save project metadata
         cls.save_project(project)
         
         return project
     
     @classmethod
-    def save_project(cls, project: Project) -> None:
-        """saveitems元count据"""
+    def save_project(cls, project: Project):
+        """Save project metadata"""
         project.updated_at = datetime.now().isoformat()
-        meta_path = cls._get_project_meta_path(project.project_id)
+        metadata_path = cls._get_project_metadata_path(project.project_id)
         
-        with open(meta_path, 'w', encoding='utf-8') as f:
+        # Ensure directory exists
+        metadata_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        with open(metadata_path, 'w', encoding='utf-8') as f:
             json.dump(project.to_dict(), f, ensure_ascii=False, indent=2)
     
     @classmethod
     def get_project(cls, project_id: str) -> Optional[Project]:
         """
-        getitems
+        Get project
         
-        Args:
-            project_id: itemsID
-            
         Returns:
-            Projectobject，ifnot存inreturnNone
+            Project object, returns None if not exists
         """
-        meta_path = cls._get_project_meta_path(project_id)
+        metadata_path = cls._get_project_metadata_path(project_id)
         
-        if not os.path.exists(meta_path):
+        if not metadata_path.exists():
             return None
         
-        with open(meta_path, 'r', encoding='utf-8') as f:
+        with open(metadata_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        
-        return Project.from_dict(data)
+            return Project.from_dict(data)
     
     @classmethod
     def list_projects(cls, limit: int = 50) -> List[Project]:
         """
-        列出所haveitems
+        List all projects
         
         Args:
-            limit: returnquantity限制
+            limit: Return quantity limit
             
         Returns:
-            itemslist，Bycreated at倒序
+            Project list, sorted by creation time descending
         """
         cls._ensure_projects_dir()
         
         projects = []
-        for project_id in os.listdir(cls.PROJECTS_DIR):
-            project = cls.get_project(project_id)
-            if project:
-                projects.append(project)
+        for project_dir in cls.PROJECTS_DIR.iterdir():
+            if project_dir.is_dir():
+                project = cls.get_project(project_dir.name)
+                if project:
+                    projects.append(project)
         
-        # Bycreatetime倒序sort
+        # Sort by creation time descending
         projects.sort(key=lambda p: p.created_at, reverse=True)
         
         return projects[:limit]
@@ -221,69 +198,68 @@ class ProjectManager:
     @classmethod
     def delete_project(cls, project_id: str) -> bool:
         """
-        deleteitemsand其所havefile
-        
-        Args:
-            project_id: itemsID
-            
-        Returns:
-            whether todeletesuccess
+        Delete project and all its files
         """
         project_dir = cls._get_project_dir(project_id)
         
-        if not os.path.exists(project_dir):
+        if not project_dir.exists():
             return False
         
+        # Delete entire project directory
         shutil.rmtree(project_dir)
         return True
     
     @classmethod
-    def save_file_to_project(cls, project_id: str, file_storage, original_filename: str) -> Dict[str, str]:
+    def save_project_file(
+        cls, 
+        project_id: str, 
+        file_content: bytes, 
+        original_filename: str
+    ) -> str:
         """
-        saveuploadoffile到itemsdirectory
+        Save uploaded file to project directory
         
         Args:
-            project_id: itemsID
-            file_storage: FlaskofFileStorageobject
-            original_filename: 原始file名
+            project_id: Project ID
+            file_content: File content
+            original_filename: Original filename
             
         Returns:
-            fileinformationdictionary {filename, path, size}
+            Saved file path
         """
+        # Generate safe filename
+        safe_filename = original_filename.replace(" ", "_")
         files_dir = cls._get_project_files_dir(project_id)
-        os.makedirs(files_dir, exist_ok=True)
+        files_dir.mkdir(parents=True, exist_ok=True)
         
-        # generation安全offile名
-        ext = os.path.splitext(original_filename)[1].lower()
-        safe_filename = f"{uuid.uuid4().hex[:8]}{ext}"
-        file_path = os.path.join(files_dir, safe_filename)
+        file_path = files_dir / safe_filename
         
-        # savefile
-        file_storage.save(file_path)
+        # Check if file exists, add suffix if so
+        counter = 1
+        while file_path.exists():
+            stem = Path(safe_filename).stem
+            suffix = Path(safe_filename).suffix
+            file_path = files_dir / f"{stem}_{counter}{suffix}"
+            counter += 1
         
-        # getfilesize
-        file_size = os.path.getsize(file_path)
+        with open(file_path, 'wb') as f:
+            f.write(file_content)
         
-        return {
-            "original_filename": original_filename,
-            "saved_filename": safe_filename,
-            "path": file_path,
-            "size": file_size
-        }
+        return str(file_path)
     
     @classmethod
-    def save_extracted_text(cls, project_id: str, text: str) -> None:
-        """saveExtractof文本"""
-        text_path = cls._get_project_text_path(project_id)
+    def save_extracted_text(cls, project_id: str, text: str):
+        """Save extracted text"""
+        text_path = cls._get_extracted_text_path(project_id)
         with open(text_path, 'w', encoding='utf-8') as f:
             f.write(text)
     
     @classmethod
     def get_extracted_text(cls, project_id: str) -> Optional[str]:
-        """getExtractof文本"""
-        text_path = cls._get_project_text_path(project_id)
+        """Get extracted text"""
+        text_path = cls._get_extracted_text_path(project_id)
         
-        if not os.path.exists(text_path):
+        if not text_path.exists():
             return None
         
         with open(text_path, 'r', encoding='utf-8') as f:
@@ -291,15 +267,10 @@ class ProjectManager:
     
     @classmethod
     def get_project_files(cls, project_id: str) -> List[str]:
-        """getitemsof所havefile路径"""
+        """Get all project file paths"""
         files_dir = cls._get_project_files_dir(project_id)
         
-        if not os.path.exists(files_dir):
+        if not files_dir.exists():
             return []
         
-        return [
-            os.path.join(files_dir, f) 
-            for f in os.listdir(files_dir) 
-            if os.path.isfile(os.path.join(files_dir, f))
-        ]
-
+        return [str(f) for f in files_dir.iterdir() if f.is_file()]

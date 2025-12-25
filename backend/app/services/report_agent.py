@@ -29,7 +29,7 @@ from .zep_tools import (
     InterviewResult
 )
 
-logger = get_logger('mirofish.report_agent')
+logger = get_logger('fishi.report_agent')
 
 
 class ReportLogger:
@@ -357,8 +357,8 @@ class ReportConsoleLogger:
         
         # 添加到 report_agent relatedof logger
         loggers_to_attach = [
-            'mirofish.report_agent',
-            'mirofish.zep_tools',
+            'fishi.report_agent',
+            'fishi.zep_tools',
         ]
         
         for logger_name in loggers_to_attach:
@@ -373,8 +373,8 @@ class ReportConsoleLogger:
         
         if self._file_handler:
             loggers_to_detach = [
-                'mirofish.report_agent',
-                'mirofish.zep_tools',
+                'fishi.report_agent',
+                'fishi.zep_tools',
             ]
             
             for logger_name in loggers_to_detach:

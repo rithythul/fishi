@@ -23,7 +23,7 @@ from ..utils.logger import get_logger
 from .neo4j_graph_memory_updater import Neo4jGraphMemoryManager as ZepGraphMemoryManager
 from .simulation_ipc import SimulationIPCClient, CommandType, IPCResponse
 
-logger = get_logger('mirofish.simulation_runner')
+logger = get_logger('fishi.simulation_runner')
 
 # 标记whether toalready registered清理function
 _cleanup_registered = False

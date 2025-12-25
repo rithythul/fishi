@@ -19,7 +19,7 @@ from ..config import Config
 from ..utils.logger import get_logger
 from ..utils.llm_client import LLMClient
 
-logger = get_logger('mirofish.zep_tools')
+logger = get_logger('fishi.zep_tools')
 
 
 @dataclass

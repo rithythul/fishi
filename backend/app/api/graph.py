@@ -19,7 +19,7 @@ from ..models.task import TaskManager, TaskStatus
 from ..models.project import ProjectManager, ProjectStatus
 
 # Get logger
-logger = get_logger('mirofish.api')
+logger = get_logger('fishi.api')
 
 
 def allowed_file(filename: str) -> bool:
@@ -296,7 +296,7 @@ def build_graph():
         # Parse request
         data = request.get_json()
         project_id = data.get('project_id', '').strip()
-        graph_name = data.get('graph_name', '').strip() or "MiroFish Graph"
+        graph_name = data.get('graph_name', '').strip() or "Fishi Graph"
         chunk_size = int(data.get('chunk_size', Config.DEFAULT_CHUNK_SIZE))
         chunk_overlap = int(data.get('chunk_overlap', Config.DEFAULT_CHUNK_OVERLAP))
         

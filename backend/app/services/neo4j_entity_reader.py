@@ -13,7 +13,7 @@ from ..config import Config
 from ..utils.logger import get_logger
 from .neo4j_service import Neo4jService
 
-logger = get_logger('mirofish.neo4j_entity_reader')
+logger = get_logger('fishi.neo4j_entity_reader')
 
 # use于泛型return type
 T = TypeVar('T')

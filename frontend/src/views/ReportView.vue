@@ -3,7 +3,7 @@
     <!-- Header -->
     <header class="app-header">
       <div class="header-left">
-        <div class="brand" @click="router.push('/')">FISHY</div>
+        <div class="brand" @click="router.push('/')">FISHI</div>
       </div>
       
       <div class="header-center">

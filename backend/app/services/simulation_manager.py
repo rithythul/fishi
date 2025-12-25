@@ -18,7 +18,7 @@ from .neo4j_entity_reader import Neo4jEntityReader as ZepEntityReader, FilteredE
 from .oasis_profile_generator import OasisProfileGenerator, OasisAgentProfile
 from .simulation_config_generator import SimulationConfigGenerator, SimulationParameters
 
-logger = get_logger('mirofish.simulation')
+logger = get_logger('fishi.simulation')
 
 
 class SimulationStatus(str, Enum):

@@ -12,7 +12,7 @@ from zep_cloud.client import Zep
 from ..config import Config
 from ..utils.logger import get_logger
 
-logger = get_logger('mirofish.zep_entity_reader')
+logger = get_logger('fishi.zep_entity_reader')
 
 # use于泛型returntype
 T = TypeVar('T')

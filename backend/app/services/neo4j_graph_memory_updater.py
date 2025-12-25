@@ -17,7 +17,7 @@ from ..utils.logger import get_logger
 from .neo4j_service import Neo4jService
 from .llm_entity_extractor import LLMEntityExtractor
 
-logger = get_logger('mirofish.neo4j_graph_memory_updater')
+logger = get_logger('fishi.neo4j_graph_memory_updater')
 
 
 @dataclass

@@ -18,7 +18,7 @@ from .neo4j_service import Neo4jService
 from .llm_entity_extractor import LLMEntityExtractor
 from ..utils.logger import get_logger
 
-logger = get_logger('mirofish.graph_builder')
+logger = get_logger('fishi.graph_builder')
 
 
 @dataclass
@@ -65,7 +65,7 @@ class GraphBuilderService:
         self,
         text: str,
         ontology: Dict[str, Any],
-        graph_name: str = "MiroFish Graph",
+        graph_name: str = "Fishi Graph",
         chunk_size: int = 500,
         chunk_overlap: int = 50,
         batch_size: int = 3
@@ -205,7 +205,7 @@ class GraphBuilderService:
             properties={
                 "graph_id": graph_id,
                 "name": name,
-                "description": "MiroFish Social Simulation Graph",
+                "description": "Fishi Social Simulation Graph",
                 "created_at": datetime.now().isoformat()
             }
         )

@@ -1,6 +1,6 @@
 """
-LLM客户端封装
-统一useOpenAIformatcall
+LLM client wrapper
+Unified OpenAI-format API calls
 """
 
 import json
@@ -11,7 +11,7 @@ from ..config import Config
 
 
 class LLMClient:
-    """LLM客户端"""
+    """LLM Client"""
     
     def __init__(
         self,
@@ -39,13 +39,13 @@ class LLMClient:
         response_format: Optional[Dict] = None
     ) -> str:
         """
-        send聊天request
+        Send chat request
         
         Args:
-            messages: messagelist
-            temperature: 温度parameters
-            max_tokens: maximumtokencount
-            response_format: responseformat（如JSONmode）
+            messages: Message list
+            temperature: Temperature parameter
+            max_tokens: Maximum token count
+            response_format: Response format (e.g., JSON mode)
             
         Returns:
             Model response text
@@ -81,7 +81,7 @@ class LLMClient:
             Parsed JSON object
         """
         from ..utils.logger import get_logger
-        logger = get_logger('mirofish.llm_client')
+        logger = get_logger('fishi.llm_client')
         
         try:
             logger.debug(f"Calling LLM API: model={self.model}, base_url={self.base_url}")
@@ -104,4 +104,3 @@ class LLMClient:
         except Exception as e:
             logger.error(f"LLM API call failed: {type(e).__name__}: {str(e)}")
             raise
-

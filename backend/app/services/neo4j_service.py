@@ -13,14 +13,14 @@ from neo4j.exceptions import ServiceUnavailable, TransientError
 from ..config import Config
 from ..utils.logger import get_logger
 
-logger = get_logger('mirofish.neo4j_service')
+logger = get_logger('fishi.neo4j_service')
 
 T = TypeVar('T')
 
 
 class Neo4jService:
     """
-    Neo4j database service for MiroFish
+    Neo4j database service for Fishi
     
     Provides connection management, transaction handling, and basic CRUD operations
     """

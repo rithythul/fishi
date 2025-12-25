@@ -97,7 +97,7 @@
           @click="handleNextStep"
         >
           <span v-if="isGeneratingReport" class="loading-spinner-small"></span>
-          {{ isGeneratingReport ? 'Starting...' : 'StartGeneratingresultReport' }} 
+          {{ isGeneratingReport ? 'Starting...' : 'Start Generating Result Report' }} 
           <span v-if="!isGeneratingReport" class="arrow-icon">→</span>
         </button>
       </div>
@@ -379,7 +379,7 @@ const resetAllState = () => {
 // Start Simulation
 const doStartSimulation = async () => {
   if (!props.simulationId) {
-    addLog('Error：缺少 simulationId')
+    addLog('Error: Missing simulationId')
     return
   }
   
@@ -388,7 +388,7 @@ const doStartSimulation = async () => {
   
   isStarting.value = true
   startError.value = null
-  addLog('In progress启动双Platform并行Simulation...')
+  addLog('Starting dual-platform parallel simulation...')
   emit('update-status', 'processing')
   
   try {
@@ -404,15 +404,15 @@ const doStartSimulation = async () => {
       addLog(`SettingsmaximumSimulationroundscount: ${props.maxRounds}`)
     }
     
-    addLog('已EnableDynamicsGraphUpdate模式')
+    addLog('Dynamic graph update mode enabled')
     
     const res = await startSimulation(params)
     
     if (res.success && res.data) {
       if (res.data.force_restarted) {
-        addLog('✓ 已清理旧ofSimulation Logs，重新Start Simulation')
+        addLog('✓ Cleared old simulation logs, restarting simulation')
       }
-      addLog('✓ Simulation引擎启动Success')
+      addLog('✓ Simulation engine started successfully')
       addLog(`  ├─ PID: ${res.data.process_pid || '-'}`)
       
       phase.value = 1
@@ -421,13 +421,13 @@ const doStartSimulation = async () => {
       startStatusPolling()
       startDetailPolling()
     } else {
-      startError.value = res.error || '启动Failed'
-      addLog(`✗ 启动Failed: ${res.error || '未知Error'}`)
+      startError.value = res.error || 'Start failed'
+      addLog(`✗ Start failed: ${res.error || 'Unknown error'}`)
       emit('update-status', 'error')
     }
   } catch (err) {
     startError.value = err.message
-    addLog(`✗ 启动异常: ${err.message}`)
+    addLog(`✗ Start exception: ${err.message}`)
     emit('update-status', 'error')
   } finally {
     isStarting.value = false
@@ -445,15 +445,15 @@ const handleStopSimulation = async () => {
     const res = await stopSimulation({ simulation_id: props.simulationId })
     
     if (res.success) {
-      addLog('✓ Simulation已Stop')
+      addLog('✓ Simulation stopped')
       phase.value = 2
       stopPolling()
       emit('update-status', 'completed')
     } else {
-      addLog(`StopFailed: ${res.error || '未知Error'}`)
+      addLog(`Stop failed: ${res.error || 'Unknown error'}`)
     }
   } catch (err) {
-    addLog(`Stop异常: ${err.message}`)
+    addLog(`Stop exception: ${err.message}`)
   } finally {
     isStopping.value = false
   }
@@ -517,7 +517,7 @@ const fetchRunStatus = async () => {
       
       if (isCompleted || platformsCompleted) {
         if (platformsCompleted && !isCompleted) {
-          addLog('✓ 检测到所YesPlatformSimulation已end')
+          addLog('✓ Detected all platforms simulation completed')
         }
         addLog('✓ SimulationCompleted')
         phase.value = 2

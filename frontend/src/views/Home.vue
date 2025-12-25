@@ -2,7 +2,7 @@
   <div class="home-container">
     <!-- Top navigation bar -->
     <nav class="navbar">
-      <div class="nav-brand">MIROFISH</div>
+      <div class="nav-brand">FISHY</div>
       <div class="nav-links">
         <a href="https://github.com/666ghj/MiroFish" target="_blank" class="github-link">
           Visit our GitHub <span class="arrow">↗</span>
@@ -11,47 +11,90 @@
     </nav>
 
     <div class="main-content">
-      <!-- Upper section: Hero area -->
+      <!-- Hero section: Interaction console -->
       <section class="hero-section">
-        <div class="hero-left">
-          <div class="tag-row">
-            <span class="orange-tag">SIMPLE & UNIVERSAL SWARM ENGINE</span>
-            <span class="version-text">/ V1.0-PREVIEW</span>
+        <div class="console-box">
+          <!-- Upload area -->
+          <div class="console-section">
+            <div class="console-header">
+              <span class="console-label">01 / Reality Seeds</span>
+              <span class="console-meta">Supported formats: PDF, MD, TXT</span>
+            </div>
+            
+            <div 
+              class="upload-zone"
+              :class="{ 'drag-over': isDragOver, 'has-files': files.length > 0 }"
+              @dragover.prevent="handleDragOver"
+              @dragleave.prevent="handleDragLeave"
+              @drop.prevent="handleDrop"
+              @click="triggerFileInput"
+            >
+              <input
+                ref="fileInput"
+                type="file"
+                multiple
+                accept=".pdf,.md,.txt"
+                @change="handleFileSelect"
+                style="display: none"
+                :disabled="loading"
+              />
+              
+              <div v-if="files.length === 0" class="upload-placeholder">
+                <div class="upload-icon">↑</div>
+                <div class="upload-title">Drag & Drop Files</div>
+                <div class="upload-hint">or click to browse</div>
+              </div>
+              
+              <div v-else class="file-list">
+                <div v-for="(file, index) in files" :key="index" class="file-item">
+                  <span class="file-icon">📄</span>
+                  <span class="file-name">{{ file.name }}</span>
+                  <button @click.stop="removeFile(index)" class="remove-btn">×</button>
+                </div>
+              </div>
+            </div>
           </div>
-          
-          <h1 class="main-title">
-            Upload Any Report<br>
-            <span class="gradient-text">Predict the Future Instantly</span>
-          </h1>
-          
-          <div class="hero-desc">
-            <p>
-              Even with just a piece of text, <span class="highlight-bold">MiroFish</span> can automatically generate a parallel world composed of up to <span class="highlight-orange">millions of Agents</span> based on the reality seeds within. Through a god's-eye view, inject variables and find the <span class="highlight-code">"local optimal solution"</span> in complex group interactions under dynamic environments.
-            </p>
-            <p class="slogan-text">
-              Let the future rehearse among Agents, let decisions prevail after countless simulations<span class="blinking-cursor">_</span>
-            </p>
+
+          <!-- divider -->
+          <div class="console-divider">
+            <span>Input Parameters</span>
           </div>
-           
-          <div class="decoration-square"></div>
-        </div>
-        
-        <div class="hero-right">
-          <!-- Logo area -->
-          <div class="logo-container">
-            <img src="../assets/logo/MiroFish_logo_left.jpeg" alt="MiroFish Logo" class="hero-logo" />
+
+          <!-- input area -->
+          <div class="console-section">
+            <div class="console-header">
+              <span class="console-label">>_ 02 / Simulation Prompt</span>
+            </div>
+            <div class="input-wrapper">
+              <textarea
+                v-model="formData.simulationRequirement"
+                class="code-input"
+                placeholder="// Enter simulation or prediction requirements in natural language (e.g., What public opinion trends would emerge if...)"
+                rows="6"
+                :disabled="loading"
+              ></textarea>
+              <div class="model-badge">Engine: MiroFish-V1.0</div>
+            </div>
           </div>
-          
-          <button class="scroll-down-btn" @click="scrollToBottom">
-            ↓
-          </button>
+
+          <!-- start button -->
+          <div class="console-section btn-section">
+            <button 
+              class="start-engine-btn"
+              @click="startSimulation"
+              :disabled="!canSubmit || loading"
+            >
+              <span v-if="!loading">Start Engine</span>
+              <span v-else>Initializing...</span>
+              <span class="btn-arrow">→</span>
+            </button>
+          </div>
         </div>
       </section>
 
-      <!-- Lower section: Split View layout -->
+      <!-- Dashboard section: Single column layout -->
       <section class="dashboard-section">
-        <!-- Left panel: status and steps -->
-        <div class="left-panel">
+        <div class="info-panel">
           <div class="panel-header">
             <span class="status-dot">■</span> System Status
           </div>
@@ -114,87 +157,6 @@
                   <div class="step-desc">Chat with any agent in the simulation & Interact with ReportAgent</div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right panel: Interaction console -->
-        <div class="right-panel">
-          <div class="console-box">
-            <!-- Upload area -->
-            <div class="console-section">
-              <div class="console-header">
-                <span class="console-label">01 / Reality Seeds</span>
-                <span class="console-meta">Supported formats: PDF, MD, TXT</span>
-              </div>
-              
-              <div 
-                class="upload-zone"
-                :class="{ 'drag-over': isDragOver, 'has-files': files.length > 0 }"
-                @dragover.prevent="handleDragOver"
-                @dragleave.prevent="handleDragLeave"
-                @drop.prevent="handleDrop"
-                @click="triggerFileInput"
-              >
-                <input
-                  ref="fileInput"
-                  type="file"
-                  multiple
-                  accept=".pdf,.md,.txt"
-                  @change="handleFileSelect"
-                  style="display: none"
-                  :disabled="loading"
-                />
-                
-                <div v-if="files.length === 0" class="upload-placeholder">
-                  <div class="upload-icon">↑</div>
-                  <div class="upload-title">Drag & Drop Files</div>
-                  <div class="upload-hint">or click to browse</div>
-                </div>
-                
-                <div v-else class="file-list">
-                  <div v-for="(file, index) in files" :key="index" class="file-item">
-                    <span class="file-icon">📄</span>
-                    <span class="file-name">{{ file.name }}</span>
-                    <button @click.stop="removeFile(index)" class="remove-btn">×</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- divider -->
-            <div class="console-divider">
-              <span>Input Parameters</span>
-            </div>
-
-            <!-- input area -->
-            <div class="console-section">
-              <div class="console-header">
-                <span class="console-label">>_ 02 / Simulation Prompt</span>
-              </div>
-              <div class="input-wrapper">
-                <textarea
-                  v-model="formData.simulationRequirement"
-                  class="code-input"
-                  placeholder="// Enter simulation or prediction requirements in natural language (e.g., What public opinion trends would emerge if...)"
-                  rows="6"
-                  :disabled="loading"
-                ></textarea>
-                <div class="model-badge">Engine: MiroFish-V1.0</div>
-              </div>
-            </div>
-
-            <!-- start button -->
-            <div class="console-section btn-section">
-              <button 
-                class="start-engine-btn"
-                @click="startSimulation"
-                :disabled="!canSubmit || loading"
-              >
-                <span v-if="!loading">Start Engine</span>
-                <span v-else>Initializing...</span>
-                <span class="btn-arrow">→</span>
-              </button>
             </div>
           </div>
         </div>
@@ -375,177 +337,25 @@ const startSimulation = () => {
   padding: 60px 40px;
 }
 
-/* Hero 区域 */
+/* Hero section: Console box */
 .hero-section {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 80px;
-  position: relative;
+  margin-bottom: 60px;
 }
 
-.hero-left {
-  flex: 1;
-  padding-right: 60px;
+.hero-section .console-box {
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
-.tag-row {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 25px;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-}
-
-.orange-tag {
-  background: var(--orange);
-  color: var(--white);
-  padding: 4px 10px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  font-size: 0.75rem;
-}
-
-.version-text {
-  color: #999;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-}
-
-.main-title {
-  font-size: 4.5rem;
-  line-height: 1.2;
-  font-weight: 800;
-  margin: 0 0 40px 0;
-  letter-spacing: -2px;
-  color: var(--black);
-}
-
-.gradient-text {
-  background: linear-gradient(90deg, #000000 0%, #444444 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  display: inline-block;
-}
-
-.hero-desc {
-  font-size: 1.05rem;
-  line-height: 1.8;
-  color: var(--gray-text);
-  max-width: 640px;
-  margin-bottom: 50px;
-  font-weight: 400;
-  text-align: justify;
-}
-
-.hero-desc p {
-  margin-bottom: 1.5rem;
-}
-
-.highlight-bold {
-  color: var(--black);
-  font-weight: 700;
-}
-
-.highlight-orange {
-  color: var(--orange);
-  font-weight: 700;
-  font-family: var(--font-mono);
-}
-
-.highlight-code {
-  background: rgba(0, 0, 0, 0.05);
-  padding: 2px 6px;
-  border-radius: 2px;
-  font-family: var(--font-mono);
-  font-size: 0.9em;
-  color: var(--black);
-  font-weight: 600;
-}
-
-.slogan-text {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--black);
-  letter-spacing: 1px;
-  border-left: 3px solid var(--orange);
-  padding-left: 15px;
-  margin-top: 20px;
-}
-
-.blinking-cursor {
-  color: var(--orange);
-  animation: blink 1s step-end infinite;
-  font-weight: 700;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-.decoration-square {
-  width: 16px;
-  height: 16px;
-  background: var(--orange);
-}
-
-.hero-right {
-  flex: 0.8;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-end;
-}
-
-.logo-container {
-  width: 100%;
-  display: flex;
-  justify-content: flex-end;
-  padding-right: 40px;
-}
-
-.hero-logo {
-  max-width: 500px; /* Adjustlogosize */
-  width: 100%;
-}
-
-.scroll-down-btn {
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--border);
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--orange);
-  font-size: 1.2rem;
-  transition: all 0.2s;
-}
-
-.scroll-down-btn:hover {
-  border-color: var(--orange);
-}
-
-/* Dashboard Split View布局 */
+/* Dashboard Section: Single column */
 .dashboard-section {
-  display: flex;
-  gap: 60px;
   border-top: 1px solid var(--border);
   padding-top: 60px;
-  align-items: flex-start;
 }
 
-.dashboard-section .left-panel,
-.dashboard-section .right-panel {
-  display: flex;
-  flex-direction: column;
-}
-
-/* 左侧panel */
-.left-panel {
-  flex: 0.8;
+.info-panel {
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .panel-header {
@@ -655,10 +465,6 @@ const startSimulation = () => {
   color: var(--gray-text);
 }
 
-/* Right SideInteraction控制台 */
-.right-panel {
-  flex: 1.2;
-}
 
 .console-box {
   border: 1px solid #CCC; /* 外部实线 */
@@ -857,24 +663,18 @@ const startSimulation = () => {
   100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
 }
 
-/* Response式适配 */
+/* Responsive */
 @media (max-width: 1024px) {
-  .dashboard-section {
-    flex-direction: column;
+  .main-content {
+    padding: 40px 20px;
   }
   
-  .hero-section {
-    flex-direction: column;
+  .hero-section .console-box {
+    max-width: 100%;
   }
   
-  .hero-left {
-    padding-right: 0;
-    margin-bottom: 40px;
-  }
-  
-  .hero-logo {
-    max-width: 200px;
-    margin-bottom: 20px;
+  .info-panel {
+    max-width: 100%;
   }
 }
 </style>

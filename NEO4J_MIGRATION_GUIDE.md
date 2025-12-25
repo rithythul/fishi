@@ -51,7 +51,7 @@ pip install -r requirements.txt
 
 ```bash
 # From project root
-npm run dev
+bun run dev
 ```
 
 ## Testing the Migration

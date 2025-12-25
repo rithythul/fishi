@@ -1,38 +1,38 @@
 """
-configure管理
-统一fromitems根directoryof .env fileloadconfigure
+Configuration Management
+Load configuration from .env file in project root
 """
 
 import os
 from dotenv import load_dotenv
 
-# loaditems根directoryof .env file
-# 路径: MiroFish/.env (相to于 backend/app/config.py)
+# Load .env file from project root
+# Path: MiroFish/.env (relative to backend/app/config.py)
 project_root_env = os.path.join(os.path.dirname(__file__), '../../.env')
 
 if os.path.exists(project_root_env):
     load_dotenv(project_root_env)
 else:
-    # if根directory没have .env，尝试loadenvironmentvariable（use于生产环境）
+    # If root .env doesn't exist, try loading from environment variables (for production)
     load_dotenv()
 
 
 class Config:
-    """Flaskconfigurationclass"""
+    """Flask configuration class"""
     
-    # Flaskconfiguration
+    # Flask configuration
     SECRET_KEY = os.environ.get('SECRET_KEY', 'mirofish-secret-key')
     DEBUG = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
     
-    # JSONconfiguration - 禁useASCII转义，让 文直接显示（andnotis \uXXXX format）
+    # JSON configuration - Disable ASCII escaping for direct text display (not \uXXXX format)
     JSON_AS_ASCII = False
     
-    # LLMconfiguration（统一useOpenAIformat）
+    # LLM configuration (using OpenAI-compatible format)
     LLM_API_KEY = os.environ.get('LLM_API_KEY')
     LLM_BASE_URL = os.environ.get('LLM_BASE_URL', 'https://api.openai.com/v1')
     LLM_MODEL_NAME = os.environ.get('LLM_MODEL_NAME', 'gpt-4o-mini')
     
-    # Zepconfiguration (DEPRECATED - migrating to Neo4j)
+    # ZEP configuration (DEPRECATED - migrated to Neo4j)
     ZEP_API_KEY = os.environ.get('ZEP_API_KEY')
     
     # Neo4j Configuration
@@ -41,20 +41,20 @@ class Config:
     NEO4J_PASSWORD = os.environ.get('NEO4J_PASSWORD', 'mirofish123')
     NEO4J_DATABASE = os.environ.get('NEO4J_DATABASE', 'neo4j')
     
-    # fileuploadconfiguration
+    # File upload configuration
     MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB
     UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '../uploads')
     ALLOWED_EXTENSIONS = {'pdf', 'md', 'txt', 'markdown'}
     
-    # text processingconfiguration
-    DEFAULT_CHUNK_SIZE = 500  # 默认切blockssize
-    DEFAULT_CHUNK_OVERLAP = 50  # 默认重叠size
+    # Text processing configuration
+    DEFAULT_CHUNK_SIZE = 500  # Default chunk size
+    DEFAULT_CHUNK_OVERLAP = 50  # Default overlap size
     
-    # OASISsimulationconfiguration
+    # OASIS simulation configuration
     OASIS_DEFAULT_MAX_ROUNDS = int(os.environ.get('OASIS_DEFAULT_MAX_ROUNDS', '10'))
     OASIS_SIMULATION_DATA_DIR = os.path.join(os.path.dirname(__file__), '../uploads/simulations')
     
-    # OASISplatform can useactionconfiguration
+    # OASIS platform available actions configuration
     OASIS_TWITTER_ACTIONS = [
         'CREATE_POST', 'LIKE_POST', 'REPOST', 'FOLLOW', 'DO_NOTHING', 'QUOTE_POST'
     ]
@@ -64,14 +64,14 @@ class Config:
         'TREND', 'REFRESH', 'DO_NOTHING', 'FOLLOW', 'MUTE'
     ]
     
-    # Report Agentconfiguration
+    # Report Agent configuration
     REPORT_AGENT_MAX_TOOL_CALLS = int(os.environ.get('REPORT_AGENT_MAX_TOOL_CALLS', '5'))
     REPORT_AGENT_MAX_REFLECTION_ROUNDS = int(os.environ.get('REPORT_AGENT_MAX_REFLECTION_ROUNDS', '2'))
     REPORT_AGENT_TEMPERATURE = float(os.environ.get('REPORT_AGENT_TEMPERATURE', '0.5'))
     
     @classmethod
     def validate(cls):
-        """validate必wantconfiguration"""
+        """Validate required configuration"""
         errors = []
         if not cls.LLM_API_KEY:
             errors.append("LLM_API_KEY not configured")

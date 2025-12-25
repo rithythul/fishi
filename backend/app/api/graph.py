@@ -149,11 +149,10 @@ def generate_ontology():
             }), 400
         
         # Create project
-        project = ProjectManager.create_project(
-            name=project_name,
-            simulation_requirement=simulation_requirement,
-            additional_context=additional_context if additional_context else None
-        )
+        project = ProjectManager.create_project(name=project_name)
+        project.simulation_requirement = simulation_requirement
+        project.additional_context = additional_context if additional_context else None
+        ProjectManager.save_project(project)
         logger.info(f"Created project: {project.project_id}")
         
         # Extract file text

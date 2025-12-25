@@ -70,22 +70,38 @@ class LLMClient:
         max_tokens: int = 4096
     ) -> Dict[str, Any]:
         """
-        send聊天request并returnJSON
+        Send chat request and return JSON
         
         Args:
-            messages: messagelist
-            temperature: 温度parameters
-            max_tokens: maximumtokencount
+            messages: Message list
+            temperature: Temperature parameter
+            max_tokens: Maximum token count
             
         Returns:
-            parse后ofJSONobject
+            Parsed JSON object
         """
-        response = self.chat(
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            response_format={"type": "json_object"}
-        )
+        from ..utils.logger import get_logger
+        logger = get_logger('mirofish.llm_client')
         
-        return json.loads(response)
+        try:
+            logger.debug(f"Calling LLM API: model={self.model}, base_url={self.base_url}")
+            
+            response = self.chat(
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                response_format={"type": "json_object"}
+            )
+            
+            logger.debug(f"LLM response received, length: {len(response)} chars")
+            parsed = json.loads(response)
+            return parsed
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse LLM response as JSON: {e}")
+            logger.error(f"Response text: {response[:500] if 'response' in locals() else 'No response'}")
+            raise ValueError(f"LLM returned invalid JSON: {e}")
+        except Exception as e:
+            logger.error(f"LLM API call failed: {type(e).__name__}: {str(e)}")
+            raise
 

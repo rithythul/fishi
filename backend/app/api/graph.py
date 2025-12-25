@@ -594,13 +594,13 @@ def get_graph_data(graph_id: str):
     getgraphcount据（nodesandedges）
     """
     try:
-        if not Config.ZEP_API_KEY:
+        if not Config.NEO4J_URI:
             return jsonify({
                 "success": False,
-                "error": "ZEP_API_KEYnot configured"
+                "error": "Neo4j connection not configured"
             }), 500
         
-        builder = GraphBuilderService(api_key=Config.ZEP_API_KEY)
+        builder = GraphBuilderService()
         graph_data = builder.get_graph_data(graph_id)
         
         return jsonify({

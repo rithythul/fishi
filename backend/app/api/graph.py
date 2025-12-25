@@ -168,7 +168,8 @@ def generate_ontology():
                 }), 400
             
             try:
-                text = FileParser.parse(file)
+                parser = FileParser()
+                text = parser.parse_file(file)
                 if text:
                     document_texts.append(text)
                     logger.debug(f"Extracted text from {file.filename}: {len(text)} characters")

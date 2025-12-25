@@ -168,8 +168,18 @@ def generate_ontology():
                 }), 400
             
             try:
-                parser = FileParser()
-                text = parser.parse_file(file)
+                # Save uploaded file temporarily
+                temp_dir = Config.UPLOAD_FOLDER
+                os.makedirs(temp_dir, exist_ok=True)
+                temp_path = os.path.join(temp_dir, file.filename)
+                file.save(temp_path)
+                
+                # Extract text using FileParser
+                text = FileParser.extract_text(temp_path)
+                
+                # Clean up temp file
+                os.remove(temp_path)
+                
                 if text:
                     document_texts.append(text)
                     logger.debug(f"Extracted text from {file.filename}: {len(text)} characters")

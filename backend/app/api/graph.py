@@ -282,15 +282,15 @@ def build_graph():
     try:
         logger.info("=== start buildinggraph ===")
         
-        # checkconfiguration
+        # Check configuration
         errors = []
-        if not Config.ZEP_API_KEY:
-            errors.append("ZEP_API_KEYnot configured")
+        if not Config.NEO4J_URI or not Config.NEO4J_PASSWORD:
+            errors.append("Neo4j connection not configured (NEO4J_URI, NEO4J_PASSWORD)")
         if errors:
-            logger.error(f"configurationerror: {errors}")
+            logger.error(f"Configuration error: {errors}")
             return jsonify({
                 "success": False,
-                "error": "configurationerror: " + "; ".join(errors)
+                "error": "Configuration error: " + "; ".join(errors)
             }), 500
         
         # parserequest
@@ -382,7 +382,7 @@ def build_graph():
                 )
                 
                 # created graph构建service
-                builder = GraphBuilderService(api_key=Config.ZEP_API_KEY)
+                builder = GraphBuilderService()
                 
                 # 分blocks
                 task_manager.update_task(
@@ -622,13 +622,13 @@ def delete_graph(graph_id: str):
     deleteZepgraph
     """
     try:
-        if not Config.ZEP_API_KEY:
+        if not Config.NEO4J_URI:
             return jsonify({
                 "success": False,
-                "error": "ZEP_API_KEYnot configured"
+                "error": "Neo4j connection not configured"
             }), 500
         
-        builder = GraphBuilderService(api_key=Config.ZEP_API_KEY)
+        builder = GraphBuilderService()
         builder.delete_graph(graph_id)
         
         return jsonify({

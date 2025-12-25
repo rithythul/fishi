@@ -23,9 +23,9 @@ from .simulation_runner import (
     AgentAction,
     RoundSummary
 )
-from .zep_graph_memory_updater import (
-    ZepGraphMemoryUpdater,
-    ZepGraphMemoryManager,
+from .neo4j_graph_memory_updater import (
+    Neo4jGraphMemoryUpdater as ZepGraphMemoryUpdater,
+    Neo4jGraphMemoryManager as ZepGraphMemoryManager,
     AgentActivity
 )
 from .simulation_ipc import (

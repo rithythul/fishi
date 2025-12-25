@@ -1,6 +1,6 @@
 """
-Neo4j Graph Memory Updater Service
-Dynamically updates Neo4j graph with agent activities from simulation
+Zep图谱记忆updateservice
+ will simulation ofAgent活动动态update到Zep图谱 
 """
 
 import os
@@ -12,12 +12,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from queue import Queue, Empty
 
+from zep_cloud.client import Zep
+
 from ..config import Config
 from ..utils.logger import get_logger
-from .neo4j_service import Neo4jService
-from .llm_entity_extractor import LLMEntityExtractor
 
-logger = get_logger('mirofish.neo4j_graph_memory_updater')
+logger = get_logger('mirofish.zep_graph_memory_updater')
 
 
 @dataclass
@@ -198,68 +198,68 @@ class AgentActivity:
         return f"execute{self.action_type}操作"
 
 
-class Neo4jGraphMemoryUpdater:
+class ZepGraphMemoryUpdater:
     """
-    Neo4j Graph Memory Updater
+    Zep图谱记忆update器
     
-    Monitors simulation action logs and updates Neo4j graph in real-time with agent activities.
-    Groups by platform, batches activities and sends to Neo4j after accumulating BATCH_SIZE items.
+    监控simulationofactionslogfile， will 新ofagent活动实时update到Zep图谱 。
+    By平台分组，每累积BATCH_SIZE活动后批量send到Zep。
     
-    All meaningful actions are updated to Neo4j, with action_args containing full context:
-    - Liked/disliked post content
-    - Reposted/quoted post content
-    - Followed/muted user names
-    - Liked/disliked comment content
+    所havehave意义of行for都will被update到Zep，action_args willcontainscompleteof上下文information：
+    - 点赞/踩of帖子原文
+    - 转发/引useof帖子原文
+    - 关注/屏蔽ofuser名
+    - 点赞/踩of评论原文
     """
     
-    # Batch send size (how many activities to accumulate per platform before sending)
+    # 批量sendsize（每platform累积多少后send）
     BATCH_SIZE = 5
     
-    # Send interval (seconds) to avoid request overload
+    # send间隔（秒），避免request过快
     SEND_INTERVAL = 0.5
     
-    # Retry configuration
+    # retryconfiguration
     MAX_RETRIES = 3
-    RETRY_DELAY = 2  # seconds
+    RETRY_DELAY = 2  # 秒
     
     def __init__(self, graph_id: str, api_key: Optional[str] = None):
         """
-        Initialize updater
+        initializeupdate器
         
         Args:
-            graph_id: Neo4j graph ID
-            api_key: Not used (kept for API compatibility)
+            graph_id: Zep图谱ID
+            api_key: Zep API Key（ can 选，默认fromconfigureread）
         """
         self.graph_id = graph_id
+        self.api_key = api_key or Config.ZEP_API_KEY
         
-        # Initialize Neo4j service
-        self.neo4j = Neo4jService()
+        if not self.api_key:
+            raise ValueError("ZEP_API_KEYnot configured")
         
-        # Initialize LLM entity extractor
-        self.entity_extractor = LLMEntityExtractor()
+        self.client = Zep(api_key=self.api_key)
         
-        # Activity queue
+        # 活动队列
         self._activity_queue: Queue = Queue()
         
-        # Platform-grouped activity buffers (each platform accumulates to BATCH_SIZE then sends)
+        # Byplatform分组of活动缓冲区（每平台各自累积到BATCH_SIZE后批量send）
         self._platform_buffers: Dict[str, List[AgentActivity]] = {
             'twitter': [],
             'reddit': [],
         }
         self._buffer_lock = threading.Lock()
         
-        # Control flags
+        # 控制标志
         self._running = False
         self._worker_thread: Optional[threading.Thread] = None
         
-        # Statistics
-        self._total_activities = 0  # Activities actually added to queue
-        self._total_sent = 0        # Batches successfully sent to Neo4j
-        self._total_items_sent = 0  # Activities successfully sent to Neo4j
-        self._failed_count = 0      # Failed batch sends
-        self._skipped_count = 0     # Filtered activities (DO_NOTHING)
+        # statistics
+        self._total_activities = 0  # 实际添加到队列of活动count
+        self._total_sent = 0        # successsend到Zepof批timescount
+        self._total_items_sent = 0  # successsend到Zepof活动count
+        self._failed_count = 0      # sendfailedof批timescount
+        self._skipped_count = 0     # 被filter跳过of活动count（DO_NOTHING）
         
-        logger.info(f"Neo4jGraphMemoryUpdater initialized: graph_id={graph_id}, batch_size={self.BATCH_SIZE}")
+        logger.info(f"ZepGraphMemoryUpdater initializationcompleted: graph_id={graph_id}, batch_size={self.BATCH_SIZE}")
     
     def start(self):
         """start后台工作线程"""
@@ -379,133 +379,41 @@ class Neo4jGraphMemoryUpdater:
     
     def _send_batch_activities(self, activities: List[AgentActivity], platform: str):
         """
-        Batch send activities to Neo4j graph using LLM extraction
+        批量send活动到Zep图谱（合并for一文本）
         
         Args:
-            activities: Agent activity list
-            platform: Platform name
+            activities: Agent活动list
+            platform: 平台名称
         """
         if not activities:
             return
         
-        # Combine multiple activities into one text, separated by newlines
+        #  will 多活动合并for一文本，use换行分隔
         episode_texts = [activity.to_episode_text() for activity in activities]
         combined_text = "\n".join(episode_texts)
         
-        # Extract entities using LLM
-        agent_names = list(set(a.agent_name for a in activities))
-        extraction = self.entity_extractor.extract_from_activity(
-            combined_text,
-            agent_name=agent_names[0] if agent_names else "Agent"
-        )
-        
-        # Send with retry
+        # 带retryofsend
         for attempt in range(self.MAX_RETRIES):
             try:
-                # Add extracted entities and relationships to graph
-                self._add_extraction_to_graph(extraction, activities)
+                self.client.graph.add(
+                    graph_id=self.graph_id,
+                    type="text",
+                    data=combined_text
+                )
                 
                 self._total_sent += 1
                 self._total_items_sent += len(activities)
-                logger.info(f"Successfully sent batch of {len(activities)} {platform} activities to graph {self.graph_id}")
-                logger.debug(f"Batch content preview: {combined_text[:200]}...")
+                logger.info(f"success批量send {len(activities)} {platform}活动到graph {self.graph_id}")
+                logger.debug(f"批量content预览: {combined_text[:200]}...")
                 return
                 
             except Exception as e:
                 if attempt < self.MAX_RETRIES - 1:
-                    logger.warning(f"Batch send to Neo4j failed (attempt {attempt + 1}/{self.MAX_RETRIES}): {e}")
+                    logger.warning(f"批量send到Zepfailed (尝试 {attempt + 1}/{self.MAX_RETRIES}): {e}")
                     time.sleep(self.RETRY_DELAY * (attempt + 1))
                 else:
-                    logger.error(f"Batch send to Neo4j failed after {self.MAX_RETRIES} retries: {e}")
+                    logger.error(f"批量send到Zepfailed，alreadyretry{self.MAX_RETRIES}times: {e}")
                     self._failed_count += 1
-    
-    def _add_extraction_to_graph(
-        self,
-        extraction: Dict[str, Any],
-        activities: List[AgentActivity]
-    ):
-        """
-        Add extracted entities and relationships to Neo4j
-        
-        Args:
-            extraction: LLM extraction result
-            activities: Source activities for metadata
-        """
-        entities = extraction.get("entities", [])
-        relationships = extraction.get("relationships", [])
-        
-        # Track entity name to UUID mapping
-        entity_map = {}
-        
-        # Add entities
-        for entity in entities:
-            name = entity.get("name", "")
-            labels = entity.get("labels", [])
-            properties = entity.get("properties", {})
-            
-            if not name or not labels:
-                continue
-            
-            # Add graph_id and timestamps
-            properties["graph_id"] = self.graph_id
-            properties["name"] = name
-            properties["updated_at"] = datetime.now().isoformat()
-            
-            # Check if entity exists
-            existing = self.neo4j.execute_query(
-                "MATCH (n {graph_id: $graph_id, name: $name}) RETURN n.uuid as uuid LIMIT 1",
-                {"graph_id": self.graph_id, "name": name}
-            )
-            
-            if existing:
-                # Update entity
-                entity_uuid = existing[0]["uuid"]
-                entity_map[name] = entity_uuid
-                
-                update_query = """
-                MATCH (n {uuid: $uuid})
-                SET n += $properties
-                """
-                self.neo4j.execute_write(update_query, {
-                    "uuid": entity_uuid,
-                    "properties": properties
-                })
-            else:
-                # Create new entity
-                properties["created_at"] = datetime.now().isoformat()
-                entity_uuid = self.neo4j.create_node(
-                    labels=["GraphNode"] + labels,
-                    properties=properties
-                )
-                entity_map[name] = entity_uuid
-        
-        # Add relationships
-        for rel in relationships:
-            source_name = rel.get("source_name", "")
-            target_name = rel.get("target_name", "")
-            rel_type = rel.get("type", "RELATED_TO")
-            rel_props = rel.get("properties", {})
-            
-            if not all([source_name, target_name]):
-                continue
-            
-            source_uuid = entity_map.get(source_name)
-            target_uuid = entity_map.get(target_name)
-            
-            if not source_uuid or not target_uuid:
-                continue
-            
-            # Add temporal properties
-            rel_props["created_at"] = datetime.now().isoformat()
-            rel_props["graph_id"] = self.graph_id
-            
-            # Create relationship
-            self.neo4j.create_relationship(
-                source_uuid,
-                target_uuid,
-                rel_type,
-                rel_props
-            )
     
     def _flush_remaining(self):
         """send队列and缓冲区 剩余of活动"""
@@ -550,43 +458,43 @@ class Neo4jGraphMemoryUpdater:
         }
 
 
-class Neo4jGraphMemoryManager:
+class ZepGraphMemoryManager:
     """
-    Manages Neo4j graph memory updaters for multiple simulations
+    管理多simulationofZep图谱记忆update器
     
-    Each simulation can have its own updater instance
+    每simulationcanhave自己ofupdate器instance
     """
     
-    _updaters: Dict[str, Neo4jGraphMemoryUpdater] = {}
+    _updaters: Dict[str, ZepGraphMemoryUpdater] = {}
     _lock = threading.Lock()
     
     @classmethod
-    def create_updater(cls, simulation_id: str, graph_id: str) -> Neo4jGraphMemoryUpdater:
+    def create_updater(cls, simulation_id: str, graph_id: str) -> ZepGraphMemoryUpdater:
         """
-        Create graph memory updater for simulation
+        forsimulationcreate图谱记忆update器
         
         Args:
-            simulation_id: Simulation ID
-            graph_id: Neo4j graph ID
+            simulation_id: simulationID
+            graph_id: Zep图谱ID
             
         Returns:
-            Neo4jGraphMemoryUpdater instance
+            ZepGraphMemoryUpdaterinstance
         """
         with cls._lock:
-            # If already exists, stop the old one first
+            # ifalready存in，firststop旧of
             if simulation_id in cls._updaters:
                 cls._updaters[simulation_id].stop()
             
-            updater = Neo4jGraphMemoryUpdater(graph_id)
+            updater = ZepGraphMemoryUpdater(graph_id)
             updater.start()
             cls._updaters[simulation_id] = updater
             
-            logger.info(f"Created graph memory updater: simulation_id={simulation_id}, graph_id={graph_id}")
+            logger.info(f"created graph记忆update器: simulation_id={simulation_id}, graph_id={graph_id}")
             return updater
     
     @classmethod
-    def get_updater(cls, simulation_id: str) -> Optional[Neo4jGraphMemoryUpdater]:
-        """Get simulation updater"""
+    def get_updater(cls, simulation_id: str) -> Optional[ZepGraphMemoryUpdater]:
+        """getsimulationofupdate器"""
         return cls._updaters.get(simulation_id)
     
     @classmethod

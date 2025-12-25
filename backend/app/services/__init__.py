@@ -5,7 +5,7 @@
 from .ontology_generator import OntologyGenerator
 from .graph_builder import GraphBuilderService
 from .text_processor import TextProcessor
-from .zep_entity_reader import ZepEntityReader, EntityNode, FilteredEntities
+from .neo4j_entity_reader import Neo4jEntityReader as ZepEntityReader, EntityNode, FilteredEntities
 from .oasis_profile_generator import OasisProfileGenerator, OasisAgentProfile
 from .simulation_manager import SimulationManager, SimulationState, SimulationStatus
 from .simulation_config_generator import (

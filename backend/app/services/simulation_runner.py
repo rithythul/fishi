@@ -20,7 +20,7 @@ from queue import Queue
 
 from ..config import Config
 from ..utils.logger import get_logger
-from .zep_graph_memory_updater import ZepGraphMemoryManager
+from .neo4j_graph_memory_updater import Neo4jGraphMemoryManager as ZepGraphMemoryManager
 from .simulation_ipc import SimulationIPCClient, CommandType, IPCResponse
 
 logger = get_logger('mirofish.simulation_runner')

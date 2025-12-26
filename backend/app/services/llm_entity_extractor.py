@@ -100,7 +100,17 @@ class LLMEntityExtractor:
             )
             
             result_text = response.choices[0].message.content
-            result = json.loads(result_text)
+            if not result_text:
+                logger.error("LLM returned empty response")
+                return {"entities": [], "relationships": []}
+                
+            try:
+                result = json.loads(result_text)
+            except json.JSONDecodeError as je:
+                logger.error(f"Failed to parse LLM response as JSON: {je}")
+                logger.error(f"Raw response: {result_text}")
+                # Try to repair common JSON errors if needed, or structured fallback
+                return {"entities": [], "relationships": []}
             
             # Validate and normalize result
             normalized = self._normalize_extraction(result, ontology)
@@ -296,7 +306,14 @@ Return JSON with "entities" and "relationships" arrays.
             )
             
             result_text = response.choices[0].message.content
-            return json.loads(result_text)
+            if not result_text:
+                return {"entities": [], "relationships": []}
+                
+            try:
+                return json.loads(result_text)
+            except json.JSONDecodeError:
+                logger.error(f"Failed to parse activity extraction JSON: {result_text}")
+                return {"entities": [], "relationships": []}
             
         except Exception as e:
             logger.error(f"Activity extraction failed: {e}")

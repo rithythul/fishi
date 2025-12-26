@@ -1,0 +1,367 @@
+{
+  "project_id": "proj_9df1297796c7",
+  "name": "Unnamed Project",
+  "status": "ontology_generated",
+  "created_at": "2025-12-26T18:06:04.633744",
+  "updated_at": "2025-12-26T18:06:32.329382",
+  "ontology": {
+    "entity_types": [
+      {
+        "name": "Economist",
+        "description": "Experts and analysts from financial institutions or think tanks who provide economic forecasts.",
+        "attributes": [
+          {
+            "name": "full_name",
+            "type": "text",
+            "description": "The full name of the economist"
+          },
+          {
+            "name": "expertise_area",
+            "type": "text",
+            "description": "Specific field such as macroeconomics, labor markets, or geoeconomics"
+          },
+          {
+            "name": "current_affiliation",
+            "type": "text",
+            "description": "The institution the economist represents"
+          }
+        ],
+        "examples": [
+          "Saadia Zahidi",
+          "IMF Chief Economist"
+        ]
+      },
+      {
+        "name": "CorporateExecutive",
+        "description": "High-level leaders in private companies making strategic decisions on workforce and technology.",
+        "attributes": [
+          {
+            "name": "full_name",
+            "type": "text",
+            "description": "The full name of the executive"
+          },
+          {
+            "name": "company_name",
+            "type": "text",
+            "description": "The name of the company they lead"
+          },
+          {
+            "name": "industry_sector",
+            "type": "text",
+            "description": "The industry cluster such as Automotive, Energy, or Finance"
+          }
+        ],
+        "examples": [
+          "Tech CEO",
+          "Manufacturing Director"
+        ]
+      },
+      {
+        "name": "TechProfessional",
+        "description": "Specialists in emerging technologies like AI, Big Data, and Robotics who drive innovation.",
+        "attributes": [
+          {
+            "name": "full_name",
+            "type": "text",
+            "description": "The full name of the professional"
+          },
+          {
+            "name": "technical_specialization",
+            "type": "text",
+            "description": "Specific skill area like GenAI, Cybersecurity, or Fintech"
+          },
+          {
+            "name": "professional_role",
+            "type": "text",
+            "description": "Current job title"
+          }
+        ],
+        "examples": [
+          "AI Specialist",
+          "Fintech Engineer"
+        ]
+      },
+      {
+        "name": "GovernmentOfficial",
+        "description": "Representatives of state agencies or regulatory bodies involved in trade and industrial policy.",
+        "attributes": [
+          {
+            "name": "full_name",
+            "type": "text",
+            "description": "The full name of the official"
+          },
+          {
+            "name": "department_name",
+            "type": "text",
+            "description": "The government agency or ministry"
+          },
+          {
+            "name": "policy_focus",
+            "type": "text",
+            "description": "Primary area of regulation such as anti-trust or trade"
+          }
+        ],
+        "examples": [
+          "Minister of Trade",
+          "Competition Regulator"
+        ]
+      },
+      {
+        "name": "AcademicResearcher",
+        "description": "Scholars and professors from universities providing research on future job trends and skills.",
+        "attributes": [
+          {
+            "name": "full_name",
+            "type": "text",
+            "description": "The full name of the researcher"
+          },
+          {
+            "name": "university_affiliation",
+            "type": "text",
+            "description": "The higher education institution"
+          },
+          {
+            "name": "research_topic",
+            "type": "text",
+            "description": "The specific area of study"
+          }
+        ],
+        "examples": [
+          "Professor of Labor Economics",
+          "Sociology Researcher"
+        ]
+      },
+      {
+        "name": "MediaOutlet",
+        "description": "Organizations that report on economic trends and disseminate information to the public.",
+        "attributes": [
+          {
+            "name": "org_name",
+            "type": "text",
+            "description": "The name of the media organization"
+          },
+          {
+            "name": "media_type",
+            "type": "text",
+            "description": "Type of outlet such as digital news, TV, or financial journal"
+          },
+          {
+            "name": "geographic_reach",
+            "type": "text",
+            "description": "The primary audience location"
+          }
+        ],
+        "examples": [
+          "Financial Times",
+          "Bloomberg"
+        ]
+      },
+      {
+        "name": "EnvironmentalAdvocate",
+        "description": "Individuals or groups focused on the green transition and climate change adaptation.",
+        "attributes": [
+          {
+            "name": "full_name",
+            "type": "text",
+            "description": "The name of the advocate or spokesperson"
+          },
+          {
+            "name": "cause_focus",
+            "type": "text",
+            "description": "Specific focus like decarbonization or renewable energy"
+          }
+        ],
+        "examples": [
+          "Climate Activist",
+          "Sustainability Consultant"
+        ]
+      },
+      {
+        "name": "InternationalBody",
+        "description": "Multilateral organizations that facilitate global cooperation and standard setting.",
+        "attributes": [
+          {
+            "name": "org_name",
+            "type": "text",
+            "description": "The name of the international organization"
+          },
+          {
+            "name": "mission_focus",
+            "type": "text",
+            "description": "The primary goal such as trade, labor, or economic stability"
+          }
+        ],
+        "examples": [
+          "World Economic Forum",
+          "International Labour Organization"
+        ]
+      },
+      {
+        "name": "Person",
+        "description": "Fallback type for any natural person not fitting specific categories, such as general workers.",
+        "attributes": [
+          {
+            "name": "full_name",
+            "type": "text",
+            "description": "The full name of the individual"
+          },
+          {
+            "name": "personal_bio",
+            "type": "text",
+            "description": "A short description of the person"
+          },
+          {
+            "name": "location_city",
+            "type": "text",
+            "description": "The city or country of residence"
+          }
+        ],
+        "examples": [
+          "General Worker",
+          "Social Media User"
+        ]
+      },
+      {
+        "name": "Organization",
+        "description": "Fallback type for any group or entity not fitting specific categories, such as local NGOs.",
+        "attributes": [
+          {
+            "name": "org_name",
+            "type": "text",
+            "description": "The name of the organization"
+          },
+          {
+            "name": "org_description",
+            "type": "text",
+            "description": "A brief description of the organization's purpose"
+          }
+        ],
+        "examples": [
+          "Local Training Center",
+          "Small Business Association"
+        ]
+      }
+    ],
+    "edge_types": [
+      {
+        "name": "WORKS_FOR",
+        "description": "Indicates a person is employed by an organization.",
+        "source_targets": [
+          {
+            "source": "TechProfessional",
+            "target": "Organization"
+          },
+          {
+            "source": "CorporateExecutive",
+            "target": "Organization"
+          },
+          {
+            "source": "Person",
+            "target": "Organization"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "REPORTS_ON",
+        "description": "Indicates a media outlet or person is covering news or trends about an entity.",
+        "source_targets": [
+          {
+            "source": "MediaOutlet",
+            "target": "InternationalBody"
+          },
+          {
+            "source": "MediaOutlet",
+            "target": "Organization"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "ADVISES",
+        "description": "Indicates an expert provides guidance to a decision-making body.",
+        "source_targets": [
+          {
+            "source": "Economist",
+            "target": "GovernmentOfficial"
+          },
+          {
+            "source": "AcademicResearcher",
+            "target": "InternationalBody"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "REGULATES",
+        "description": "Indicates a government or international body sets rules for an entity.",
+        "source_targets": [
+          {
+            "source": "GovernmentOfficial",
+            "target": "Organization"
+          },
+          {
+            "source": "InternationalBody",
+            "target": "Organization"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "SUPPORTS",
+        "description": "Indicates an entity publicly agrees with or promotes another entity's stance.",
+        "source_targets": [
+          {
+            "source": "EnvironmentalAdvocate",
+            "target": "InternationalBody"
+          },
+          {
+            "source": "Person",
+            "target": "EnvironmentalAdvocate"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "OPPOSES",
+        "description": "Indicates an entity publicly disagrees with or challenges another entity.",
+        "source_targets": [
+          {
+            "source": "GovernmentOfficial",
+            "target": "Organization"
+          },
+          {
+            "source": "Person",
+            "target": "CorporateExecutive"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "COLLABORATES_WITH",
+        "description": "Indicates two entities are working together on a project or report.",
+        "source_targets": [
+          {
+            "source": "InternationalBody",
+            "target": "Organization"
+          },
+          {
+            "source": "AcademicResearcher",
+            "target": "Organization"
+          }
+        ],
+        "attributes": []
+      }
+    ]
+  },
+  "analysis_summary": "The ontology is designed to simulate social media discourse surrounding the 'Future of Jobs Report 2025'. It focuses on key actors such as economists, tech professionals, and government officials who are central to discussions on AI, geoeconomics, and the green transition. The relationships reflect professional hierarchies, regulatory actions, and the spread of information through media, allowing for a realistic simulation of how different stakeholders react to global economic shifts.",
+  "total_text_length": 858284,
+  "graph_id": null,
+  "node_count": null,
+  "edge_count": null,
+  "simulation_requirement": "analyze world economics and geopolitics in 2026",
+  "additional_context": null,
+  "simulation_id": null,
+  "simulation_config": null,
+  "files": []
+}

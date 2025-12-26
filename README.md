@@ -1,49 +1,19 @@
-<div align="center">
-
-<img src="./static/image/MiroFish_logo_compressed.jpeg" alt="MiroFish Logo" width="75%"/>
-
-简洁通用的群体智能引擎，预测万物
-</br>
-<em>A Simple and Universal Swarm Intelligence Engine, Predicting Anything</em>
-
-[![GitHub Stars](https://img.shields.io/github/stars/666ghj/MiroFish?style=flat-square)](https://github.com/666ghj/MiroFish/stargazers)
-[![GitHub Watchers](https://img.shields.io/github/watchers/666ghj/MiroFish?style=flat-square)](https://github.com/666ghj/MiroFish/watchers)
-[![GitHub Forks](https://img.shields.io/github/forks/666ghj/MiroFish?style=flat-square)](https://github.com/666ghj/MiroFish/network)
-[![GitHub Issues](https://img.shields.io/github/issues/666ghj/MiroFish?style=flat-square)](https://github.com/666ghj/MiroFish/issues)
-[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/666ghj/MiroFish?style=flat-square)](https://github.com/666ghj/MiroFish/pulls)
-
-[![GitHub License](https://img.shields.io/github/license/666ghj/MiroFish?style=flat-square)](https://github.com/666ghj/MiroFish/blob/main/LICENSE)
-[![Version](https://img.shields.io/badge/version-v0.1.0-green.svg?style=flat-square)](https://github.com/666ghj/MiroFish)
-
-[English](./README-EN.md) | [中文文档](./README.md)
-
-</div>
 
 ## ⚡ Overview
 
-**MiroFish** is a next-generation AI prediction engine powered by multi-agent technology. By extracting seed information from the real world (such as breaking news, policy drafts, or financial signals), it automatically constructs a high-fidelity parallel digital world. Within this space, thousands of intelligent agents with independent personalities, long-term memory, and behavioral logic freely interact and undergo social evolution. You can inject variables dynamically from a "God's-eye view" to precisely deduce future trajectories — **rehearse the future in a digital sandbox, and win decisions after countless simulations**.
+**Fishi** is a next-generation AI prediction engine powered by multi-agent technology. By extracting seed information from the real world (such as breaking news, policy drafts, or financial signals), it automatically constructs a high-fidelity parallel digital world. Within this space, thousands of intelligent agents with independent personalities, long-term memory, and behavioral logic freely interact and undergo social evolution. You can inject variables dynamically from a "God's-eye view" to precisely deduce future trajectories — **rehearse the future in a digital sandbox, and win decisions after countless simulations**.
 
 > You only need to: Upload seed materials (data analysis reports or interesting novel stories) and describe your prediction requirements in natural language</br>
-> MiroFish will return: A detailed prediction report and a deeply interactive high-fidelity digital world
+> Fishi will return: A detailed prediction report and a deeply interactive high-fidelity digital world
 
 ### Our Vision
 
-MiroFish is dedicated to creating a swarm intelligence mirror that maps reality. By capturing the collective emergence triggered by individual interactions, we break through the limitations of traditional prediction:
+Fishi is dedicated to creating a swarm intelligence mirror that maps reality. By capturing the collective emergence triggered by individual interactions, we break through the limitations of traditional prediction:
 
 - **At the Macro Level**: We are a rehearsal laboratory for decision-makers, allowing policies and public relations to be tested at zero risk
 - **At the Micro Level**: We are a creative sandbox for individual users — whether deducing novel endings or exploring imaginative scenarios, everything can be fun, playful, and accessible
 
 From serious predictions to playful simulations, we let every "what if" see its outcome, making it possible to predict anything.
-
-## 🎬 Demo Videos
-
-<div align="center">
-<a href="https://www.bilibili.com/video/BV1VYBsBHEMY/"><img src="./static/image/武大模拟演示封面.png" alt="MiroFish Demo Video" width="75%"/></a>
-
-Complete demo video for prediction using BettaFish-generated "Wuhan University Public Opinion Report"
-</div>
-
-> More demo videos coming soon: "Dream of the Red Chamber" ending simulation, financial prediction examples...
 
 ## 🔄 Workflow
 
@@ -57,15 +27,26 @@ Complete demo video for prediction using BettaFish-generated "Wuhan University P
 
 ### Prerequisites
 
-> Note: MiroFish was developed and tested on Mac. Windows compatibility is unknown and currently under testing.
+> Note: Fishi was developed and tested on Mac and Linux. Windows compatibility is experimental.
 
 | Tool | Version | Description | Check Installation |
 |------|---------|-------------|-------------------|
 | **Node.js** | 18+ | Frontend runtime, includes npm | `node -v` |
 | **Python** | 3.11+ | Backend runtime | `python --version` |
 | **uv** | Latest | Python package manager | `uv --version` |
+| **Docker** | Latest | For Neo4j database | `docker --version` |
 
-### 1. Configure Environment Variables
+### 1. Start Neo4j Database
+
+```bash
+# Start Neo4j using Docker Compose
+docker-compose up -d
+
+# Neo4j Browser available at: http://localhost:7474
+# Default credentials: neo4j / mirofish123
+```
+
+### 2. Configure Environment Variables
 
 ```bash
 # Copy the example configuration file
@@ -78,22 +59,20 @@ cp .env.example .env
 
 ```env
 # LLM API Configuration (supports any LLM with OpenAI SDK format)
-# Recommended: Alibaba Qwen-plus model via Bailian Platform: https://bailian.console.aliyun.com/
-# High consumption, try simulations with fewer than 40 rounds first
+# Recommended: Use a capable model like GPT-4, Claude, or Qwen
 LLM_API_KEY=your_api_key
-LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-LLM_MODEL_NAME=qwen-plus
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_MODEL_NAME=gpt-4
 
 # Neo4j Graph Database Configuration
 # Use Docker Compose to start local Neo4j: docker-compose up -d
-# Neo4j Browser: http://localhost:7474
 NEO4J_URI=bolt://localhost:7687
 NEO4J_USERNAME=neo4j
 NEO4J_PASSWORD=mirofish123
 NEO4J_DATABASE=neo4j
 ```
 
-### 2. Install Dependencies
+### 3. Install Dependencies
 
 ```bash
 # One-click installation of all dependencies (root + frontend + backend)
@@ -110,7 +89,7 @@ npm run setup
 npm run setup:backend
 ```
 
-### 3. Start Services
+### 4. Start Services
 
 ```bash
 # Start both frontend and backend (run from project root)
@@ -128,6 +107,18 @@ npm run backend   # Start backend only
 npm run frontend  # Start frontend only
 ```
 
+## 🛠️ Tech Stack
+
+- **Frontend**: Vue 3 + Vite + TypeScript
+- **Backend**: Python + Flask
+- **Database**: Neo4j (Graph Database)
+- **Simulation**: OASIS (Open Agent Social Interaction Simulations)
+- **LLM Integration**: OpenAI-compatible API
+
 ## 📄 Acknowledgments
 
-MiroFish's core simulation engine is powered by **[OASIS (Open Agent Social Interaction Simulations)](https://github.com/camel-ai/oasis)**. OASIS is a high-performance social media simulation framework developed by the [CAMEL-AI](https://github.com/camel-ai) team, supporting million-scale agent interaction simulations, providing a solid technical foundation for MiroFish's swarm intelligence emergence. We sincerely thank the CAMEL-AI team for their open-source contributions!
+Fishi's core simulation engine is powered by **[OASIS (Open Agent Social Interaction Simulations)](https://github.com/camel-ai/oasis)**. OASIS is a high-performance social media simulation framework developed by the [CAMEL-AI](https://github.com/camel-ai) team, supporting million-scale agent interaction simulations, providing a solid technical foundation for Fishi's swarm intelligence emergence. We sincerely thank the CAMEL-AI team for their open-source contributions!
+
+## 📝 License
+
+This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.

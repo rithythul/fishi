@@ -357,7 +357,7 @@
               <textarea 
                 v-model="surveyQuestion"
                 class="survey-input"
-                placeholder="输入您want问所Yes被Selectedto象ofProblem..."
+                placeholder="Enter the question you want to ask the selected subjects..."
                 rows="3"
               ></textarea>
             </div>
@@ -433,7 +433,7 @@ const showToolsDetail = ref(true)
 // Chat State
 const chatInput = ref('')
 const chatHistory = ref([])
-const chatHistoryCache = ref({}) // 缓存所Yesto话record: { 'report_agent': [], 'agent_0': [], 'agent_1': [], ... }
+const chatHistoryCache = ref({}) // Cached chat history: { 'report_agent': [], 'agent_0': [], 'agent_1': [], ... }
 const isSending = ref(false)
 const chatMessages = ref(null)
 const chatInputRef = ref(null)
@@ -483,7 +483,7 @@ const selectChatTarget = (target) => {
   }
 }
 
-// SaveCurrentto话record到缓存
+// Save current chat history to cache
 const saveChatHistory = () => {
   if (chatHistory.value.length === 0) return
   
@@ -495,7 +495,7 @@ const saveChatHistory = () => {
 }
 
 const selectReportAgentChat = () => {
-  // SaveCurrentto话record
+  // Save current chat history
   saveChatHistory()
   
   activeTab.value = 'chat'
@@ -504,7 +504,7 @@ const selectReportAgentChat = () => {
   selectedAgentIndex.value = null
   showAgentDropdown.value = false
   
-  // Restore Report Agent ofto话record
+  // Restore Report Agent chat history
   chatHistory.value = chatHistoryCache.value['report_agent'] || []
 }
 
@@ -524,7 +524,7 @@ const toggleAgentDropdown = () => {
 }
 
 const selectAgent = (agent, idx) => {
-  // SaveCurrentto话record
+  // Save current chat history
   saveChatHistory()
   
   selectedAgent.value = agent
@@ -532,7 +532,7 @@ const selectAgent = (agent, idx) => {
   chatTarget.value = 'agent'
   showAgentDropdown.value = false
   
-  // Restore该 Agent ofto话record
+  // Restore this Agent's chat history
   chatHistory.value = chatHistoryCache.value[`agent_${idx}`] || []
   addLog(`Select Chat Target: ${agent.username}`)
 }
@@ -562,7 +562,7 @@ const renderMarkdown = (content) => {
   html = html.replace(/^# (.+)$/gm, '<h2 class="md-h2">$1</h2>')
   html = html.replace(/^> (.+)$/gm, '<blockquote class="md-quote">$1</blockquote>')
   
-  // Processlist - Support子list
+  // Process list - Support sub-list
   html = html.replace(/^(\s*)- (.+)$/gm, (match, indent, text) => {
     const level = Math.floor(indent.length / 2)
     return `<li class="md-li" data-level="${level}">${text}</li>`
@@ -572,17 +572,17 @@ const renderMarkdown = (content) => {
     return `<li class="md-oli" data-level="${level}">${text}</li>`
   })
   
-  // package装NoneSequence表
+  // Wrap Unordered List
   html = html.replace(/(<li class="md-li"[^>]*>.*?<\/li>\s*)+/g, '<ul class="md-ul">$&</ul>')
-  // package装YesSequence表
+  // Wrap Ordered List
   html = html.replace(/(<li class="md-oli"[^>]*>.*?<\/li>\s*)+/g, '<ol class="md-ol">$&</ol>')
   
-  // 清理list项之间of所Yes空白
+  // Clean all whitespace between list items
   html = html.replace(/<\/li>\s+<li/g, '</li><li')
-  // 清理listStartlabel后of空白
+  // Clean whitespace after list start tag
   html = html.replace(/<ul class="md-ul">\s+/g, '<ul class="md-ul">')
   html = html.replace(/<ol class="md-ol">\s+/g, '<ol class="md-ol">')
-  // 清理listendlabel前of空白
+  // Clean whitespace before list end tag
   html = html.replace(/\s+<\/ul>/g, '</ul>')
   html = html.replace(/\s+<\/ol>/g, '</ol>')
   
@@ -598,12 +598,12 @@ const renderMarkdown = (content) => {
   html = html.replace(/(<\/h[2-5]>)<\/p>/g, '$1')
   html = html.replace(/<p class="md-p">(<ul|<ol|<blockquote|<pre|<hr)/g, '$1')
   html = html.replace(/(<\/ul>|<\/ol>|<\/blockquote>|<\/pre>)<\/p>/g, '$1')
-  // 清理list前后of <br> label
+  // Clean <br> tags before and after list
   html = html.replace(/<br>\s*(<ul|<ol)/g, '$1')
   html = html.replace(/(<\/ul>|<\/ol>)\s*<br>/g, '$1')
-  // 清理连续of <br> label
+  // Clean consecutive <br> tags
   html = html.replace(/(<br>\s*){2,}/g, '<br>')
-  // 清理list后紧跟of段落Startlabel前of <br>
+  // Clean <br> before paragraph start tag immediately following list
   html = html.replace(/(<\/ol>|<\/ul>)<br>(<p|<div)/g, '$1$2')
   
   return html
@@ -636,19 +636,19 @@ const sendMessage = async () => {
     addLog(`SendFailed: ${err.message}`)
     chatHistory.value.push({
       role: 'assistant',
-      content: `抱歉，发生Error: ${err.message}`,
+      content: `Sorry, an error occurred: ${err.message}`,
       timestamp: new Date().toISOString()
     })
   } finally {
     isSending.value = false
     scrollToBottom()
-    // AutomaticSaveto话record到缓存
+    // Automatically save chat history to cache
     saveChatHistory()
   }
 }
 
 const sendToReportAgent = async (message) => {
-  addLog(`向 Report Agent Send: ${message.substring(0, 50)}...`)
+  addLog(`Sending to Report Agent: ${message.substring(0, 50)}...`)
   
   // Build chat history for API
   const historyForApi = chatHistory.value
@@ -668,21 +668,21 @@ const sendToReportAgent = async (message) => {
   if (res.success && res.data) {
     chatHistory.value.push({
       role: 'assistant',
-      content: res.data.response || res.data.answer || 'NoneResponse',
+      content: res.data.response || res.data.answer || 'No Response',
       timestamp: new Date().toISOString()
     })
-    addLog('Report Agent 已Reply')
+    addLog('Report Agent has replied')
   } else {
-    throw new Error(res.error || 'requestFailed')
+    throw new Error(res.error || 'Request Failed')
   }
 }
 
 const sendToAgent = async (message) => {
   if (!selectedAgent.value || selectedAgentIndex.value === null) {
-    throw new Error('请先选择一unitsSimulationunits体')
+    throw new Error('Please select a simulation agent first')
   }
   
-  addLog(`向 ${selectedAgent.value.username} Send: ${message.substring(0, 50)}...`)
+  addLog(`Sending to ${selectedAgent.value.username}: ${message.substring(0, 50)}...`)
   
   // Build prompt with chat history
   let prompt = message
@@ -690,9 +690,9 @@ const sendToAgent = async (message) => {
     const historyContext = chatHistory.value
       .filter(msg => msg.content !== message)
       .slice(-6)
-      .map(msg => `${msg.role === 'user' ? '提问者' : 'you'}：${msg.content}`)
+      .map(msg => `${msg.role === 'user' ? 'Interviewer' : 'You'}: ${msg.content}`)
       .join('\n')
-    prompt = `以下YesI们之前ofto话：\n${historyContext}\n\n现inIof新ProblemYes：${message}`
+    prompt = `Here is our previous conversation:\n${historyContext}\n\nMy new question is: ${message}`
   }
   
   const res = await interviewAgents({
@@ -704,17 +704,17 @@ const sendToAgent = async (message) => {
   })
   
   if (res.success && res.data) {
-    // 正确ofdata路径: res.data.result.results Yes一unitsto象dictionary
-    // Format: {"twitter_0": {...}, "reddit_0": {...}} 或单Platform {"reddit_0": {...}}
+    // Correct data path: res.data.result.results is an object dictionary
+    // Format: {"twitter_0": {...}, "reddit_0": {...}} or single platform {"reddit_0": {...}}
     const resultData = res.data.result || res.data
     const resultsDict = resultData.results || resultData
     
-    // 将to象dictionaryconvertforarray，优先get reddit PlatformofReply
+    // Convert object dictionary to array, prioritize reddit platform reply
     let responseContent = null
     const agentId = selectedAgentIndex.value
     
     if (typeof resultsDict === 'object' && !Array.isArray(resultsDict)) {
-      // 优先使use reddit PlatformReply，其次 twitter
+      // Prioritize Reddit platform reply, then Twitter
       const redditKey = `reddit_${agentId}`
       const twitterKey = `twitter_${agentId}`
       const agentResult = resultsDict[redditKey] || resultsDict[twitterKey] || Object.values(resultsDict)[0]
@@ -732,12 +732,12 @@ const sendToAgent = async (message) => {
         content: responseContent,
         timestamp: new Date().toISOString()
       })
-      addLog(`${selectedAgent.value.username} 已Reply`)
+      addLog(`${selectedAgent.value.username} has replied`)
     } else {
-      throw new Error('NoneResponsedata')
+      throw new Error('No response data')
     }
   } else {
-    throw new Error(res.error || 'requestFailed')
+    throw new Error(res.error || 'Request Failed')
   }
 }
 
@@ -774,7 +774,7 @@ const submitSurvey = async () => {
   if (selectedAgents.value.size === 0 || !surveyQuestion.value.trim()) return
   
   isSurveying.value = true
-  addLog(`Send问卷give ${selectedAgents.value.size} unitsto象...`)
+  addLog(`Sending survey to ${selectedAgents.value.size} subjects...`)
   
   try {
     const interviews = Array.from(selectedAgents.value).map(idx => ({
@@ -788,33 +788,33 @@ const submitSurvey = async () => {
     })
     
     if (res.success && res.data) {
-      // 正确ofdata路径: res.data.result.results Yes一unitsto象dictionary
+      // Correct data path: res.data.result.results is an object dictionary
       // Format: {"twitter_0": {...}, "reddit_0": {...}, "twitter_1": {...}, ...}
       const resultData = res.data.result || res.data
       const resultsDict = resultData.results || resultData
       
-      // 将to象dictionaryconvertforarrayFormat
+      // Convert object dictionary to array format
       const surveyResultsList = []
       
       for (const interview of interviews) {
         const agentIdx = interview.agent_id
         const agent = profiles.value[agentIdx]
         
-        // 优先使use reddit PlatformReply，其次 twitter
-        let responseContent = 'NoneResponse'
+        // Prioritize Reddit platform reply, then Twitter
+        let responseContent = 'No Response'
         
         if (typeof resultsDict === 'object' && !Array.isArray(resultsDict)) {
           const redditKey = `reddit_${agentIdx}`
           const twitterKey = `twitter_${agentIdx}`
           const agentResult = resultsDict[redditKey] || resultsDict[twitterKey]
           if (agentResult) {
-            responseContent = agentResult.response || agentResult.answer || 'NoneResponse'
+            responseContent = agentResult.response || agentResult.answer || 'No Response'
           }
         } else if (Array.isArray(resultsDict)) {
-          // CompatiblearrayFormat
+          // Compatible array format
           const matchedResult = resultsDict.find(r => r.agent_id === agentIdx)
           if (matchedResult) {
-            responseContent = matchedResult.response || matchedResult.answer || 'NoneResponse'
+            responseContent = matchedResult.response || matchedResult.answer || 'No Response'
           }
         }
         
@@ -828,12 +828,12 @@ const submitSurvey = async () => {
       }
       
       surveyResults.value = surveyResultsList
-      addLog(`收到 ${surveyResults.value.length} itemsReply`)
+      addLog(`Received ${surveyResults.value.length} replies`)
     } else {
-      throw new Error(res.error || 'requestFailed')
+      throw new Error(res.error || 'Request Failed')
     }
   } catch (err) {
-    addLog(`问卷SendFailed: ${err.message}`)
+    addLog(`Survey failed to send: ${err.message}`)
   } finally {
     isSurveying.value = false
   }
@@ -844,7 +844,7 @@ const loadReportData = async () => {
   if (!props.reportId) return
   
   try {
-    addLog(`LoadingReportdata: ${props.reportId}`)
+    addLog(`Loading report data: ${props.reportId}`)
     
     // Get report info
     const reportRes = await getReport(props.reportId)
@@ -853,7 +853,7 @@ const loadReportData = async () => {
       await loadAgentLogs()
     }
   } catch (err) {
-    addLog(`LoadingReportFailed: ${err.message}`)
+    addLog(`Failed to load report: ${err.message}`)
   }
 }
 
@@ -875,10 +875,10 @@ const loadAgentLogs = async () => {
         }
       })
       
-      addLog('ReportdataLoading Completed')
+      addLog('Report data loading completed')
     }
   } catch (err) {
-    addLog(`LoadingReportlogFailed: ${err.message}`)
+    addLog(`Failed to load report logs: ${err.message}`)
   }
 }
 
@@ -889,10 +889,10 @@ const loadProfiles = async () => {
     const res = await getSimulationProfilesRealtime(props.simulationId, 'reddit')
     if (res.success && res.data) {
       profiles.value = res.data.profiles || []
-      addLog(`Loading ${profiles.value.length} unitsSimulationunits体`)
+      addLog(`Loading ${profiles.value.length} simulation agents`)
     }
   } catch (err) {
-    addLog(`LoadingSimulationunits体Failed: ${err.message}`)
+    addLog(`Failed to load simulation agents: ${err.message}`)
   }
 }
 
@@ -906,7 +906,7 @@ const handleClickOutside = (e) => {
 
 // Lifecycle
 onMounted(() => {
-  addLog('Step5 Deep InteractionInitializing')
+  addLog('Step5 Deep Interaction Initializing')
   loadReportData()
   loadProfiles()
   document.addEventListener('click', handleClickOutside)
@@ -951,7 +951,7 @@ watch(() => props.simulationId, (newId) => {
   overflow: hidden;
 }
 
-/* Left Panel - Report Style (with Step4Report.vue 完全一致) */
+/* Left Panel - Report Style (Fully consistent with Step4Report.vue) */
 .left-panel.report-style {
   width: 45%;
   min-width: 450px;
@@ -1602,6 +1602,7 @@ watch(() => props.simulationId, (newId) => {
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1999,7 +2000,7 @@ watch(() => props.simulationId, (newId) => {
   margin-bottom: 0;
 }
 
-/* FIXMEYesSequence表编号 - 使use CSS count器让多units ol 连续编号 */
+/* FIXME Sequence List Numbering - Use CSS counters for continuous numbering of multiple ol units */
 .message-text {
   counter-reset: list-counter;
 }
@@ -2025,7 +2026,7 @@ watch(() => props.simulationId, (newId) => {
   flex-shrink: 0;
 }
 
-/* NoneSequence表样式 */
+/* Unordered List Styles */
 .message-text :deep(.md-ul) {
   padding-left: 20px;
   margin: 8px 0;
@@ -2504,7 +2505,7 @@ watch(() => props.simulationId, (newId) => {
   margin: 6px 0;
 }
 
-/* 聊天/问卷区域of引use样式 */
+/* Chat/Survey Area Quote Styles */
 .chat-messages :deep(.md-quote),
 .result-answer :deep(.md-quote) {
   margin: 12px 0;

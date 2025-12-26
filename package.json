@@ -1,7 +1,7 @@
 {
   "name": "fishi",
-  "version": "0.1.0",
-  "description": "MiroFish - 简洁通用的群体智能引擎，预测万物",
+  "version": "0.2.0",
+  "description": "Fishi - A Simple and Universal Swarm Intelligence Engine, Predicting Anything",
   "scripts": {
     "setup": "npm install && cd frontend && npm install",
     "setup:backend": "cd backend && uv sync",
@@ -17,5 +17,5 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "license": "AGPL-3.0"
+  "license": "Apache-2.0"
 }

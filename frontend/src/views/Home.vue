@@ -176,36 +176,36 @@ const formData = ref({
   simulationRequirement: ''
 })
 
-// 文件list
+// File list
 const files = ref([])
 
-// status
+// Status
 const loading = ref(false)
 const error = ref('')
 const isDragOver = ref(false)
 
-// 文件输入引use
+// File input reference
 const fileInput = ref(null)
 
-// 计算attributes:YesNocanSubmit
+// Computed attributes: canSubmit
 const canSubmit = computed(() => {
   return formData.value.simulationRequirement.trim() !== '' && files.value.length > 0
 })
 
-// 触发文件选择
+// Trigger file selection
 const triggerFileInput = () => {
   if (!loading.value) {
     fileInput.value?.click()
   }
 }
 
-// Process文件选择
+// Process file selection
 const handleFileSelect = (event) => {
   const selectedFiles = Array.from(event.target.files)
   addFiles(selectedFiles)
 }
 
-// Process拖拽related
+// Process drag related
 const handleDragOver = (e) => {
   if (!loading.value) {
     isDragOver.value = true
@@ -224,7 +224,7 @@ const handleDrop = (e) => {
   addFiles(droppedFiles)
 }
 
-// Add文件
+// Add files
 const addFiles = (newFiles) => {
   const validFiles = newFiles.filter(file => {
     const ext = file.name.split('.').pop().toLowerCase()
@@ -233,12 +233,12 @@ const addFiles = (newFiles) => {
   files.value.push(...validFiles)
 }
 
-// 移除文件
+// Remove file
 const removeFile = (index) => {
   files.value.splice(index, 1)
 }
 
-// 滚动到底部
+// Scroll to bottom
 const scrollToBottom = () => {
   window.scrollTo({
     top: document.body.scrollHeight,
@@ -246,15 +246,15 @@ const scrollToBottom = () => {
   })
 }
 
-// StartSimulation - 立即跳转，API调useinProcesspage进行
+// Start Simulation - Jump immediately, API call in Process page
 const startSimulation = () => {
   if (!canSubmit.value || loading.value) return
   
-  // 存储待Uploadofdata
+  // Store pending upload data
   import('../store/pendingUpload.js').then(({ setPendingUpload }) => {
     setPendingUpload(files.value, formData.value.simulationRequirement)
     
-    // 立即跳转到Processpage（使use特殊标识expressNewitems）
+    // Jump immediately to Process page (use special flag for new items)
     router.push({
       name: 'Process',
       params: { projectId: 'new' }
@@ -264,7 +264,7 @@ const startSimulation = () => {
 </script>
 
 <style scoped>
-/* 全局variablewithReset */
+/* Global variables and Reset */
 :root {
   --black: #000000;
   --white: #FFFFFF;
@@ -273,8 +273,8 @@ const startSimulation = () => {
   --gray-text: #666666;
   --border: #E5E5E5;
   /* 
-    使use Space Grotesk 作for主wanttitle字体，JetBrains Mono 作for代码/label字体
-    确保已in index.html 引入this些 Google Fonts 
+    Use Space Grotesk as main title font, JetBrains Mono as code/label font
+    Ensure these Google Fonts are imported in index.html 
   */
   --font-mono: 'JetBrains Mono', monospace;
   --font-sans: 'Space Grotesk', -apple-system, sans-serif;
@@ -287,7 +287,7 @@ const startSimulation = () => {
   color: var(--black);
 }
 
-/* 顶部navigation */
+/* Top navigation */
 .navbar {
   height: 60px;
   background: var(--black);
@@ -330,7 +330,7 @@ const startSimulation = () => {
   font-family: sans-serif;
 }
 
-/* 主wantcontent区 */
+/* Main content area */
 .main-content {
   max-width: 1400px;
   margin: 0 auto;
@@ -467,8 +467,8 @@ const startSimulation = () => {
 
 
 .console-box {
-  border: 1px solid #CCC; /* 外部实线 */
-  padding: 8px; /* 内edges距形成双重edges框感 */
+  border: 1px solid #CCC; /* Outer solid line */
+  padding: 8px; /* Inner padding creates double border effect */
 }
 
 .console-section {
@@ -631,7 +631,7 @@ const startSimulation = () => {
   overflow: hidden;
 }
 
-/* 可Clickstatus（非Disable） */
+/* Clickable status (not disabled) */
 .start-engine-btn:not(:disabled) {
   background: var(--black);
   border: 1px solid var(--black);
@@ -656,7 +656,7 @@ const startSimulation = () => {
   border: 1px solid #E5E5E5;
 }
 
-/* 引导动画：微妙ofedges框脉冲 */
+/* Guide animation: Subtle border pulse */
 @keyframes pulse-border {
   0% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.2); }
   70% { box-shadow: 0 0 0 6px rgba(0, 0, 0, 0); }

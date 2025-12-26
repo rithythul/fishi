@@ -1,0 +1,316 @@
+{
+  "project_id": "proj_7d7564cf5565",
+  "name": "Unnamed Project",
+  "status": "graph_built",
+  "created_at": "2025-12-26T17:21:36.778762",
+  "updated_at": "2025-12-26T17:22:07.127313",
+  "ontology": {
+    "entity_types": [
+      {
+        "name": "TechCorporation",
+        "description": "Large technology companies that design, manufacture, and market consumer electronics.",
+        "attributes": [
+          {
+            "name": "legal_name",
+            "type": "text",
+            "description": "The full legal name of the corporation."
+          },
+          {
+            "name": "market_sector",
+            "type": "text",
+            "description": "The specific sector of technology they dominate."
+          }
+        ],
+        "examples": [
+          "Apple",
+          "Samsung"
+        ]
+      },
+      {
+        "name": "TechInfluencer",
+        "description": "Individuals or social media personalities who review and provide opinions on new gadgets.",
+        "attributes": [
+          {
+            "name": "handle",
+            "type": "text",
+            "description": "Social media username or handle."
+          },
+          {
+            "name": "subscriber_count",
+            "type": "text",
+            "description": "Approximate number of followers or subscribers."
+          }
+        ],
+        "examples": [
+          "Marques Brownlee",
+          "TechReviewer2025"
+        ]
+      },
+      {
+        "name": "IndustryAnalyst",
+        "description": "Experts who analyze market trends, financial performance, and future technology shifts.",
+        "attributes": [
+          {
+            "name": "firm_affiliation",
+            "type": "text",
+            "description": "The financial or research firm the analyst works for."
+          },
+          {
+            "name": "specialization",
+            "type": "text",
+            "description": "The specific market niche they analyze."
+          }
+        ],
+        "examples": [
+          "Ming-Chi Kuo",
+          "Market Trends Group"
+        ]
+      },
+      {
+        "name": "TechJournalist",
+        "description": "Professional reporters who write for news outlets covering technology breakthroughs.",
+        "attributes": [
+          {
+            "name": "publication_name",
+            "type": "text",
+            "description": "The news organization they write for."
+          },
+          {
+            "name": "beat",
+            "type": "text",
+            "description": "The specific topic area they cover."
+          }
+        ],
+        "examples": [
+          "The Verge Reporter",
+          "CNET Editor"
+        ]
+      },
+      {
+        "name": "Executive",
+        "description": "High-level leaders of technology companies who make public announcements.",
+        "attributes": [
+          {
+            "name": "job_title",
+            "type": "text",
+            "description": "The official title of the executive."
+          },
+          {
+            "name": "company_affiliation",
+            "type": "text",
+            "description": "The company they lead."
+          }
+        ],
+        "examples": [
+          "Tim Cook",
+          "Samsung CEO"
+        ]
+      },
+      {
+        "name": "ResearchInstitute",
+        "description": "Organizations focused on developing new technologies like quantum batteries or displays.",
+        "attributes": [
+          {
+            "name": "research_focus",
+            "type": "text",
+            "description": "The primary area of scientific inquiry."
+          },
+          {
+            "name": "location_city",
+            "type": "text",
+            "description": "The city where the institute is based."
+          }
+        ],
+        "examples": [
+          "MIT Media Lab",
+          "Quantum Tech Labs"
+        ]
+      },
+      {
+        "name": "Investor",
+        "description": "Individuals or entities that trade stocks based on market trends and product releases.",
+        "attributes": [
+          {
+            "name": "investor_class",
+            "type": "text",
+            "description": "Whether they are institutional or retail investors."
+          },
+          {
+            "name": "portfolio_size",
+            "type": "text",
+            "description": "General scale of their investment holdings."
+          }
+        ],
+        "examples": [
+          "WallStreetBets User",
+          "Vanguard Group"
+        ]
+      },
+      {
+        "name": "RegulatoryBody",
+        "description": "Government agencies that oversee competition and technology standards.",
+        "attributes": [
+          {
+            "name": "jurisdiction",
+            "type": "text",
+            "description": "The country or region they regulate."
+          },
+          {
+            "name": "authority_level",
+            "type": "text",
+            "description": "The scope of their legal power."
+          }
+        ],
+        "examples": [
+          "FTC",
+          "European Commission"
+        ]
+      },
+      {
+        "name": "Person",
+        "description": "Fallback type for any natural person not fitting specific categories.",
+        "attributes": [
+          {
+            "name": "full_name",
+            "type": "text",
+            "description": "The person's full name."
+          },
+          {
+            "name": "user_bio",
+            "type": "text",
+            "description": "Short biography of the individual."
+          }
+        ],
+        "examples": [
+          "John Doe",
+          "Tech Enthusiast"
+        ]
+      },
+      {
+        "name": "Organization",
+        "description": "Fallback type for any group or entity not fitting specific categories.",
+        "attributes": [
+          {
+            "name": "org_name",
+            "type": "text",
+            "description": "The name of the organization."
+          },
+          {
+            "name": "industry",
+            "type": "text",
+            "description": "The industry the organization operates in."
+          }
+        ],
+        "examples": [
+          "Local Tech Club",
+          "Global Standards Org"
+        ]
+      }
+    ],
+    "edge_types": [
+      {
+        "name": "COMPETES_WITH",
+        "description": "Indicates direct market competition between two entities.",
+        "source_targets": [
+          {
+            "source": "TechCorporation",
+            "target": "TechCorporation"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "REVIEWS_PRODUCT_OF",
+        "description": "An influencer or journalist reviewing a product from a corporation.",
+        "source_targets": [
+          {
+            "source": "TechInfluencer",
+            "target": "TechCorporation"
+          },
+          {
+            "source": "TechJournalist",
+            "target": "TechCorporation"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "PREDICTS_TREND_FOR",
+        "description": "An analyst making a prediction about a company or market.",
+        "source_targets": [
+          {
+            "source": "IndustryAnalyst",
+            "target": "TechCorporation"
+          },
+          {
+            "source": "IndustryAnalyst",
+            "target": "Organization"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "WORKS_FOR",
+        "description": "A person or executive employed by an organization.",
+        "source_targets": [
+          {
+            "source": "Executive",
+            "target": "TechCorporation"
+          },
+          {
+            "source": "Person",
+            "target": "Organization"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "INVESTS_IN",
+        "description": "An investor putting capital into a corporation.",
+        "source_targets": [
+          {
+            "source": "Investor",
+            "target": "TechCorporation"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "RESPONDS_TO",
+        "description": "One entity publicly reacting to the actions or posts of another.",
+        "source_targets": [
+          {
+            "source": "TechCorporation",
+            "target": "TechCorporation"
+          },
+          {
+            "source": "Person",
+            "target": "TechInfluencer"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "REGULATES",
+        "description": "A regulatory body overseeing a corporation's activities.",
+        "source_targets": [
+          {
+            "source": "RegulatoryBody",
+            "target": "TechCorporation"
+          }
+        ],
+        "attributes": []
+      }
+    ]
+  },
+  "analysis_summary": "The ontology is designed to simulate the social media discourse surrounding the 2025 smartphone market battle between Apple and Samsung. It focuses on the key actors: the corporations themselves, the influencers and journalists who shape public perception, the analysts who predict market shifts, and the investors who react to these trends. Fallback types ensure all social media participants can be categorized.",
+  "total_text_length": 229,
+  "graph_id": "fishi_0f0940f27eee45f2",
+  "node_count": null,
+  "edge_count": null,
+  "simulation_requirement": "analyse market trends",
+  "additional_context": null,
+  "simulation_id": null,
+  "simulation_config": null,
+  "files": []
+}

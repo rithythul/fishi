@@ -14,7 +14,7 @@ from enum import Enum
 
 from ..config import Config
 from ..utils.logger import get_logger
-from .neo4j_entity_reader import Neo4jEntityReader as ZepEntityReader, FilteredEntities
+from .neo4j_entity_reader import Neo4jEntityReader, FilteredEntities
 from .oasis_profile_generator import OasisProfileGenerator, OasisAgentProfile
 from .simulation_config_generator import SimulationConfigGenerator, SimulationParameters
 
@@ -272,7 +272,7 @@ class SimulationManager:
             if progress_callback:
                 progress_callback("reading", 0, "Connecting to Neo4j graph...")
             
-            reader = ZepEntityReader()
+            reader = Neo4jEntityReader()
             
             if progress_callback:
                 progress_callback("reading", 30, "Reading node data...")

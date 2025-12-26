@@ -161,7 +161,7 @@ const handleNextStep = (params = {}) => {
     currentStep.value++
     addLog(`Entering Step ${currentStep.value}: ${stepNames[currentStep.value - 1]}`)
     
-    // ifYesfrom Step 2 Entering Step 3，recordSimulationroundscountconfiguration
+    // If entering Step 3 from Step 2, record simulation rounds count configuration
     if (currentStep.value === 3 && params.maxRounds) {
       addLog(`Custom simulation rounds: ${params.maxRounds} rounds`)
     }

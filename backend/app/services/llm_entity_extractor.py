@@ -1,6 +1,6 @@
 """
 LLM-Based Entity Extractor
-Replaces ZEP's automatic entity extraction with LLM-based extraction
+Replaces manual entity extraction with LLM-based extraction
 """
 
 import json
@@ -131,60 +131,88 @@ class LLMEntityExtractor:
         entity_types = ontology.get("entity_types", [])
         edge_types = ontology.get("edge_types", [])
         
-        entity_descriptions = "\n".join([
-            f"  - {et['name']}: {et.get('description', 'No description')}"
-            for et in entity_types
-        ])
+        # Build comprehensive entity type descriptions with ALL attributes
+        entity_type_details = []
+        for et in entity_types:
+            attrs = et.get("attributes", [])
+            attr_list = ", ".join([f'"{a["name"]}"' for a in attrs]) if attrs else "none specified"
+            entity_type_details.append(
+                f"  - **{et['name']}**: {et.get('description', 'No description')}\n"
+                f"    Required attributes: [{attr_list}]"
+            )
+        entity_descriptions = "\n".join(entity_type_details)
         
         edge_descriptions = "\n".join([
             f"  - {et['name']}: {et.get('description', 'No description')}"
             for et in edge_types
         ])
         
-        attribute_examples = {}
+        # Build full attribute schema for each entity type
+        attribute_schema = {}
         for et in entity_types:
             attrs = et.get("attributes", [])
-            if attrs:
-                attribute_examples[et['name']] = [a['name'] for a in attrs[:3]]  # First 3 attributes
+            attribute_schema[et['name']] = {
+                a['name']: a.get('description', 'No description') 
+                for a in attrs
+            }
         
-        prompt = f"""Extract entities and relationships from the following text.
+        prompt = f"""You are an expert entity extractor for knowledge graph construction. 
+Extract ALL entities and relationships from the text below.
 
-**Entity Types (extract these):**
+**IMPORTANT: Be thorough and extract RICH information for each entity!**
+
+**Entity Types to Extract:**
 {entity_descriptions}
 
-**Relationship Types (extract these):**
+**Relationship Types to Extract:**
 {edge_descriptions}
 
-**Instructions:**
-1. Identify ALL entities mentioned in the text that match the defined entity types
-2. For each entity, extract relevant properties (name, attributes, etc.)
-3. Identify relationships between entities that match the defined relationship types
-4. Return results in JSON format with "entities" and "relationships" arrays
+**Attribute Schema (extract ALL these attributes for each entity type):**
+{json.dumps(attribute_schema, indent=2)}
 
-**Example attribute properties for entities:**
-{json.dumps(attribute_examples, indent=2)}
+**Extraction Instructions:**
+1. Find ALL entities matching the defined types in the text
+2. For EACH entity, extract:
+   - name: The entity's proper name
+   - labels: The entity type(s) from the schema
+   - summary: A 2-3 sentence description of the entity based on the text
+   - properties: Extract ALL attributes defined in the schema above!
+     - If an attribute value isn't mentioned, infer reasonable values OR leave empty
+     - Include at least 3-5 properties per entity
+3. Extract ALL relationships between entities
+4. For relationships, include a "fact" property describing the relationship
 
-**Text to analyze:**
+**Text to Analyze:**
 {text}
 
-**Return format (JSON only):**
+**Return JSON format:**
 {{
   "entities": [
     {{
-      "name": "entity name",
+      "name": "Entity Name",
       "labels": ["EntityType"],
-      "properties": {{"key": "value"}}
+      "summary": "2-3 sentence description of this entity's role and characteristics",
+      "properties": {{
+        "attribute1": "value1",
+        "attribute2": "value2", 
+        "description": "Brief description if applicable"
+      }}
     }}
   ],
   "relationships": [
     {{
-      "source_name": "entity1 name",
-      "target_name": "entity2 name",
+      "source_name": "Entity1 Name",
+      "target_name": "Entity2 Name",
       "type": "RELATIONSHIP_TYPE",
-      "properties": {{"key": "value"}}
+      "properties": {{
+        "fact": "Descriptive sentence about this relationship"
+      }}
     }}
   ]
 }}
+
+CRITICAL: Each entity MUST have at least 3 properties. Include summary for all entities.
+Return ONLY valid JSON, no explanations.
 """
         return prompt
     
@@ -215,6 +243,7 @@ class LLMEntityExtractor:
             name = entity.get("name", "")
             labels = entity.get("labels", [])
             properties = entity.get("properties", {})
+            summary = entity.get("summary", "")  # Extract summary field
             
             if not name or not labels:
                 continue
@@ -223,10 +252,15 @@ class LLMEntityExtractor:
             if isinstance(labels, str):
                 labels = [labels]
             
+            # Add summary to properties if provided
+            if summary and "summary" not in properties:
+                properties["summary"] = summary
+            
             normalized_entities.append({
                 "name": name,
                 "labels": labels,
-                "properties": properties
+                "properties": properties,
+                "summary": summary  # Include summary at top level too
             })
         
         # Normalize relationships
@@ -278,27 +312,51 @@ class LLMEntityExtractor:
 
 **Extract:**
 1. People mentioned (including the agent: {agent_name})
-2. Topics or content discussed
+2. Topics, concepts, or content discussed (with context and significance)
 3. Actions/relationships between entities
+
+**IMPORTANT: For each Topic, provide rich details including:**
+- A summary (2-3 sentences explaining the topic in context)
+- Why it's significant in this activity
+- Related keywords or context
 
 Return JSON with "entities" and "relationships" arrays.
 
 **Format:**
 {{
   "entities": [
-    {{"name": "person/topic name", "labels": ["Person" or "Topic"], "properties": {{}}}}
+    {{
+      "name": "Entity Name",
+      "labels": ["Person" or "Topic"],
+      "summary": "2-3 sentence description of this entity's role and significance",
+      "properties": {{
+        "context": "Why this entity is mentioned",
+        "significance": "Its importance in the discussion",
+        "keywords": "related terms"
+      }}
+    }}
   ],
   "relationships": [
-    {{"source_name": "agent", "target_name": "entity", "type": "MENTIONED/LIKED/etc", "properties": {{}}}}
+    {{
+      "source_name": "agent",
+      "target_name": "entity",
+      "type": "MENTIONED/DISCUSSED/ANALYZED/LIKED/etc",
+      "properties": {{
+        "fact": "Descriptive sentence about this interaction",
+        "sentiment": "positive/neutral/negative"
+      }}
+    }}
   ]
 }}
+
+CRITICAL: Each entity MUST have a summary and at least 2 properties.
 """
         
         try:
             response = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=[
-                    {"role": "system", "content": "Extract structured data from social media activities. Return JSON only."},
+                    {"role": "system", "content": "Extract structured data from social media activities with rich details. Return JSON only."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.3,
@@ -310,7 +368,14 @@ Return JSON with "entities" and "relationships" arrays.
                 return {"entities": [], "relationships": []}
                 
             try:
-                return json.loads(result_text)
+                result = json.loads(result_text)
+                # Ensure summary is included in properties for each entity
+                for entity in result.get("entities", []):
+                    if entity.get("summary") and "summary" not in entity.get("properties", {}):
+                        if "properties" not in entity:
+                            entity["properties"] = {}
+                        entity["properties"]["summary"] = entity["summary"]
+                return result
             except json.JSONDecodeError:
                 logger.error(f"Failed to parse activity extraction JSON: {result_text}")
                 return {"entities": [], "relationships": []}

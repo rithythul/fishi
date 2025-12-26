@@ -494,8 +494,10 @@ class Neo4jGraphMemoryUpdater:
             if not source_uuid or not target_uuid:
                 continue
             
-            # Add temporal properties
-            rel_props["created_at"] = datetime.now().isoformat()
+            # Add temporal properties for memory classification
+            now = datetime.now().isoformat()
+            rel_props["created_at"] = now
+            rel_props["valid_at"] = now  # Mark as currently valid for memory queries
             rel_props["graph_id"] = self.graph_id
             
             # Create relationship

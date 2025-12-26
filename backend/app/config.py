@@ -7,14 +7,14 @@ import os
 from dotenv import load_dotenv
 
 # Load .env file from project root
-# Path: MiroFish/.env (relative to backend/app/config.py)
+# Path: Fishi/.env (relative to backend/app/config.py)
 project_root_env = os.path.join(os.path.dirname(__file__), '../../.env')
 
 if os.path.exists(project_root_env):
-    load_dotenv(project_root_env)
+    load_dotenv(project_root_env, override=True)
 else:
     # If root .env doesn't exist, try loading from environment variables (for production)
-    load_dotenv()
+    load_dotenv(override=True)
 
 
 class Config:
@@ -32,13 +32,10 @@ class Config:
     LLM_BASE_URL = os.environ.get('LLM_BASE_URL', 'https://api.openai.com/v1')
     LLM_MODEL_NAME = os.environ.get('LLM_MODEL_NAME', 'gpt-4o-mini')
     
-    # ZEP configuration (DEPRECATED - migrated to Neo4j)
-    ZEP_API_KEY = os.environ.get('ZEP_API_KEY')
-    
     # Neo4j Configuration
     NEO4J_URI = os.environ.get('NEO4J_URI', 'bolt://localhost:7687')
     NEO4J_USERNAME = os.environ.get('NEO4J_USERNAME', 'neo4j')
-    NEO4J_PASSWORD = os.environ.get('NEO4J_PASSWORD', 'mirofish123')
+    NEO4J_PASSWORD = os.environ.get('NEO4J_PASSWORD', 'fishi123')
     NEO4J_DATABASE = os.environ.get('NEO4J_DATABASE', 'neo4j')
     
     # File upload configuration
@@ -47,8 +44,8 @@ class Config:
     ALLOWED_EXTENSIONS = {'pdf', 'md', 'txt', 'markdown'}
     
     # Text processing configuration
-    DEFAULT_CHUNK_SIZE = 500  # Default chunk size
-    DEFAULT_CHUNK_OVERLAP = 50  # Default overlap size
+    DEFAULT_CHUNK_SIZE = 2000  # Default chunk size (increased for fewer batches)
+    DEFAULT_CHUNK_OVERLAP = 100  # Default overlap size
     
     # OASIS simulation configuration
     OASIS_DEFAULT_MAX_ROUNDS = int(os.environ.get('OASIS_DEFAULT_MAX_ROUNDS', '10'))
@@ -78,4 +75,3 @@ class Config:
         if not cls.NEO4J_URI or not cls.NEO4J_PASSWORD:
             errors.append("Neo4j connection not configured (NEO4J_URI, NEO4J_PASSWORD)")
         return errors
-

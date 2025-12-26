@@ -20,7 +20,7 @@ from queue import Queue
 
 from ..config import Config
 from ..utils.logger import get_logger
-from .neo4j_graph_memory_updater import Neo4jGraphMemoryManager as ZepGraphMemoryManager
+from .neo4j_graph_memory_updater import Neo4jGraphMemoryManager
 from .simulation_ipc import SimulationIPCClient, CommandType, IPCResponse
 
 logger = get_logger('fishi.simulation_runner')
@@ -311,8 +311,8 @@ class SimulationRunner:
         simulation_id: str,
         platform: str = "parallel",  # twitter / reddit / parallel
         max_rounds: int = None,  # Optional maximum simulation rounds (used to truncate long simulations)
-        enable_graph_memory_update: bool = False,  # Whether to dynamically update to Zepp graph
-        graph_id: str = None  # Zepp Graph ID (required when graph update is enabled)
+        enable_graph_memory_update: bool = False,  # Whether to dynamically update to Neo4j graph
+        graph_id: str = None  # Neo4j Graph ID (required when graph update is enabled)
     ) -> SimulationRunState:
         """
         Start simulation
@@ -321,8 +321,8 @@ class SimulationRunner:
             simulation_id: Simulation ID
             platform: Running platform (twitter/reddit/parallel)
             max_rounds: Maximum simulation rounds (optional, used to truncate long simulations)
-            enable_graph_memory_update: Whether to dynamically update Agent activities to Zepp graph
-            graph_id: Zepp Graph ID (required when graph update is enabled)
+            enable_graph_memory_update: Whether to dynamically update Agent activities to Neo4j graph
+            graph_id: Neo4j Graph ID (required when graph update is enabled)
             
         Returns:
             SimulationRunState
@@ -371,7 +371,7 @@ class SimulationRunner:
                 raise ValueError("Graph ID must be provided when graph memory update is enabled")
             
             try:
-                ZepGraphMemoryManager.create_updater(simulation_id, graph_id)
+                Neo4jGraphMemoryManager.create_updater(simulation_id, graph_id)
                 cls._graph_memory_enabled[simulation_id] = True
                 logger.info(f"Graph memory update enabled: simulation_id={simulation_id}, graph_id={graph_id}")
             except Exception as e:
@@ -540,7 +540,7 @@ class SimulationRunner:
             # Stop graph memory updater
             if cls._graph_memory_enabled.get(simulation_id, False):
                 try:
-                    ZepGraphMemoryManager.stop_updater(simulation_id)
+                    Neo4jGraphMemoryManager.stop_updater(simulation_id)
                     logger.info(f"Graph memory update stopped: simulation_id={simulation_id}")
                 except Exception as e:
                     logger.error(f"Failed to stop graph memory updater: {e}")
@@ -588,7 +588,7 @@ class SimulationRunner:
         graph_memory_enabled = cls._graph_memory_enabled.get(state.simulation_id, False)
         graph_updater = None
         if graph_memory_enabled:
-            graph_updater = ZepGraphMemoryManager.get_updater(state.simulation_id)
+            graph_updater = Neo4jGraphMemoryManager.get_updater(state.simulation_id)
         
         try:
             with open(log_path, 'r', encoding='utf-8') as f:
@@ -661,7 +661,7 @@ class SimulationRunner:
                             if action.round_num and action.round_num > state.current_round:
                                 state.current_round = action.round_num
                             
-                            # If graph memory update enabled, send activity to Zepp
+                            # If graph memory update enabled, send activity to Neo4j
                             if graph_updater:
                                 graph_updater.add_activity_from_dict(action_data, platform)
                             
@@ -753,7 +753,7 @@ class SimulationRunner:
         # Stop graph memory updater
         if cls._graph_memory_enabled.get(simulation_id, False):
             try:
-                ZepGraphMemoryManager.stop_updater(simulation_id)
+                Neo4jGraphMemoryManager.stop_updater(simulation_id)
                 logger.info(f"Graph memory update stopped: simulation_id={simulation_id}")
             except Exception as e:
                 logger.error(f"Failed to stop graph memory updater: {e}")
@@ -1146,7 +1146,7 @@ class SimulationRunner:
         
         # First stop all graph memory updaters (stop_all will print log internally)
         try:
-            ZepGraphMemoryManager.stop_all()
+            Neo4jGraphMemoryManager.stop_all()
         except Exception as e:
             logger.error(f"Failed to stop graph memory updaters: {e}")
         cls._graph_memory_enabled.clear()

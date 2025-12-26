@@ -1,0 +1,328 @@
+{
+  "project_id": "proj_259227994660",
+  "name": "Unnamed Project",
+  "status": "graph_built",
+  "created_at": "2025-12-26T14:24:44.019014",
+  "updated_at": "2025-12-26T14:25:21.752395",
+  "ontology": {
+    "entity_types": [
+      {
+        "name": "TechnologyCompany",
+        "description": "Firms that design, manufacture, and sell consumer electronics and software.",
+        "attributes": [
+          {
+            "name": "legal_entity_name",
+            "type": "text",
+            "description": "The official registered name of the company."
+          },
+          {
+            "name": "market_valuation",
+            "type": "text",
+            "description": "The current estimated market value or stock ticker."
+          },
+          {
+            "name": "primary_product_line",
+            "type": "text",
+            "description": "The main category of hardware or software they produce."
+          }
+        ],
+        "examples": [
+          "Apple",
+          "Samsung"
+        ]
+      },
+      {
+        "name": "TechReviewer",
+        "description": "Individuals or accounts that test and provide opinions on new technology products.",
+        "attributes": [
+          {
+            "name": "platform_handle",
+            "type": "text",
+            "description": "The social media username or channel name."
+          },
+          {
+            "name": "expertise_niche",
+            "type": "text",
+            "description": "Specific area of focus, such as mobile displays or batteries."
+          }
+        ],
+        "examples": [
+          "Marques Brownlee",
+          "The Verge Review Team"
+        ]
+      },
+      {
+        "name": "MarketAnalyst",
+        "description": "Professionals who study market trends and predict future industry shifts.",
+        "attributes": [
+          {
+            "name": "firm_name",
+            "type": "text",
+            "description": "The financial or research firm they are affiliated with."
+          },
+          {
+            "name": "prediction_focus",
+            "type": "text",
+            "description": "The specific market sector they analyze."
+          }
+        ],
+        "examples": [
+          "Ming-Chi Kuo",
+          "Gartner Analyst"
+        ]
+      },
+      {
+        "name": "MediaOutlet",
+        "description": "Organizations that publish news, reports, and articles about the tech industry.",
+        "attributes": [
+          {
+            "name": "publication_title",
+            "type": "text",
+            "description": "The name of the newspaper, website, or TV station."
+          },
+          {
+            "name": "audience_reach",
+            "type": "text",
+            "description": "Description of the scale of their readership."
+          }
+        ],
+        "examples": [
+          "TechCrunch",
+          "Bloomberg Technology"
+        ]
+      },
+      {
+        "name": "Executive",
+        "description": "High-ranking individuals in tech companies who make strategic decisions.",
+        "attributes": [
+          {
+            "name": "job_role",
+            "type": "text",
+            "description": "The specific title, such as CEO or VP of Engineering."
+          },
+          {
+            "name": "employer_org",
+            "type": "text",
+            "description": "The company they currently lead."
+          }
+        ],
+        "examples": [
+          "Tim Cook",
+          "Lee Jae-yong"
+        ]
+      },
+      {
+        "name": "Investor",
+        "description": "Individuals or entities that provide capital to tech companies and react to market news.",
+        "attributes": [
+          {
+            "name": "investment_style",
+            "type": "text",
+            "description": "Whether they are institutional, venture capital, or retail."
+          },
+          {
+            "name": "portfolio_size",
+            "type": "text",
+            "description": "General scale of their investment holdings."
+          }
+        ],
+        "examples": [
+          "Warren Buffett",
+          "Retail Stock Trader"
+        ]
+      },
+      {
+        "name": "ResearchInstitution",
+        "description": "Labs or universities developing foundational technologies like quantum batteries.",
+        "attributes": [
+          {
+            "name": "research_specialty",
+            "type": "text",
+            "description": "The scientific field they focus on."
+          },
+          {
+            "name": "funding_type",
+            "type": "text",
+            "description": "How the research is financed."
+          }
+        ],
+        "examples": [
+          "MIT Media Lab",
+          "Samsung Advanced Institute of Technology"
+        ]
+      },
+      {
+        "name": "Consumer",
+        "description": "End users who purchase tech products and share their experiences online.",
+        "attributes": [
+          {
+            "name": "brand_preference",
+            "type": "text",
+            "description": "The specific brand the user is loyal to."
+          },
+          {
+            "name": "adoption_speed",
+            "type": "text",
+            "description": "Whether they are an early adopter or a late majority user."
+          }
+        ],
+        "examples": [
+          "iPhone Enthusiast",
+          "Early Adopter"
+        ]
+      },
+      {
+        "name": "Person",
+        "description": "Fallback type for any natural person not covered by specific categories.",
+        "attributes": [
+          {
+            "name": "full_legal_name",
+            "type": "text",
+            "description": "The person's full name."
+          },
+          {
+            "name": "social_bio",
+            "type": "text",
+            "description": "A short description of the person's profile."
+          }
+        ],
+        "examples": [
+          "John Doe",
+          "Random Netizen"
+        ]
+      },
+      {
+        "name": "Organization",
+        "description": "Fallback type for any group or entity not covered by specific categories.",
+        "attributes": [
+          {
+            "name": "org_full_name",
+            "type": "text",
+            "description": "The full name of the organization."
+          },
+          {
+            "name": "entity_type_desc",
+            "type": "text",
+            "description": "Description of what kind of organization it is."
+          }
+        ],
+        "examples": [
+          "Local Tech Club",
+          "Standardization Body"
+        ]
+      }
+    ],
+    "edge_types": [
+      {
+        "name": "COMPETES_WITH",
+        "description": "Indicates a competitive relationship between two technology companies.",
+        "source_targets": [
+          {
+            "source": "TechnologyCompany",
+            "target": "TechnologyCompany"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "REVIEWS_PRODUCT_OF",
+        "description": "A reviewer evaluating a product released by a company.",
+        "source_targets": [
+          {
+            "source": "TechReviewer",
+            "target": "TechnologyCompany"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "PREDICTS_TREND_FOR",
+        "description": "An analyst making a market forecast regarding a company or sector.",
+        "source_targets": [
+          {
+            "source": "MarketAnalyst",
+            "target": "TechnologyCompany"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "REPORTS_ON",
+        "description": "A media outlet covering news about a company or individual.",
+        "source_targets": [
+          {
+            "source": "MediaOutlet",
+            "target": "TechnologyCompany"
+          },
+          {
+            "source": "MediaOutlet",
+            "target": "Executive"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "WORKS_FOR",
+        "description": "An individual employed by a specific organization.",
+        "source_targets": [
+          {
+            "source": "Executive",
+            "target": "TechnologyCompany"
+          },
+          {
+            "source": "Person",
+            "target": "Organization"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "INVESTS_IN",
+        "description": "An investor putting capital into a company.",
+        "source_targets": [
+          {
+            "source": "Investor",
+            "target": "TechnologyCompany"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "PURCHASES_FROM",
+        "description": "A consumer buying products from a company.",
+        "source_targets": [
+          {
+            "source": "Consumer",
+            "target": "TechnologyCompany"
+          }
+        ],
+        "attributes": []
+      },
+      {
+        "name": "RESPONDS_TO",
+        "description": "One entity reacting to the actions or posts of another.",
+        "source_targets": [
+          {
+            "source": "TechnologyCompany",
+            "target": "TechnologyCompany"
+          },
+          {
+            "source": "Person",
+            "target": "Person"
+          }
+        ],
+        "attributes": []
+      }
+    ]
+  },
+  "analysis_summary": "The ontology is designed to simulate the social media discourse surrounding the 2025 smartphone market competition between Apple and Samsung. It captures key actors such as tech reviewers, market analysts, and media outlets who drive the narrative, while providing fallback types for general users and organizations to ensure all social media participants are represented.",
+  "total_text_length": 229,
+  "graph_id": "fishi_d0b0271c5b634354",
+  "node_count": null,
+  "edge_count": null,
+  "simulation_requirement": "analyse market trends",
+  "additional_context": null,
+  "simulation_id": null,
+  "simulation_config": null,
+  "files": []
+}

@@ -61,13 +61,15 @@ class LLMClient:
             kwargs["response_format"] = response_format
         
         response = self.client.chat.completions.create(**kwargs)
-        return response.choices[0].message.content
+        content = response.choices[0].message.content
+        # Ensure we never return None
+        return content if content is not None else ""
     
     def chat_json(
         self,
         messages: List[Dict[str, str]],
         temperature: float = 0.3,
-        max_tokens: int = 4096
+        max_tokens: int = 8192  # Increased from 4096 to handle complex responses
     ) -> Dict[str, Any]:
         """
         Send chat request and return JSON
@@ -94,8 +96,15 @@ class LLMClient:
             )
             
             logger.debug(f"LLM response received, length: {len(response)} chars")
-            parsed = json.loads(response)
-            return parsed
+            
+            try:
+                parsed = json.loads(response)
+                return parsed
+            except json.JSONDecodeError as e:
+                # Try to repair truncated JSON
+                logger.warning(f"JSON parse failed, attempting repair: {e}")
+                repaired = self._repair_truncated_json(response)
+                return json.loads(repaired)
             
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse LLM response as JSON: {e}")
@@ -104,3 +113,28 @@ class LLMClient:
         except Exception as e:
             logger.error(f"LLM API call failed: {type(e).__name__}: {str(e)}")
             raise
+    
+    def _repair_truncated_json(self, content: str) -> str:
+        """
+        Attempt to repair truncated JSON by closing unclosed brackets
+        """
+        import re
+        
+        content = content.strip()
+        
+        # Count unclosed brackets
+        open_braces = content.count('{') - content.count('}')
+        open_brackets = content.count('[') - content.count(']')
+        
+        # Check for unclosed string - if last meaningful char isn't a quote, comma, bracket
+        if content and content[-1] not in '",}]':
+            # Try to find if we're inside a string value
+            # Look for the pattern ": "value that's incomplete
+            if re.search(r':\s*"[^"]*$', content):
+                content += '"'
+        
+        # Close brackets and braces
+        content += ']' * open_brackets
+        content += '}' * open_braces
+        
+        return content

@@ -162,7 +162,7 @@
                   {{ action.action_args.content }}
                 </div>
 
-                <!-- QUOTE_POST: 引use帖子 -->
+                <!-- QUOTE_POST: Quote Post -->
                 <template v-if="action.action_type === 'QUOTE_POST'">
                   <div v-if="action.action_args?.quote_content" class="content-text">
                     {{ action.action_args.quote_content }}
@@ -178,7 +178,7 @@
                   </div>
                 </template>
 
-                <!-- REPOST: 转Posts子 -->
+                <!-- REPOST: Repost -->
                 <template v-if="action.action_type === 'REPOST'">
                   <div class="repost-info">
                     <svg class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
@@ -189,7 +189,7 @@
                   </div>
                 </template>
 
-                <!-- LIKE_POST: Like帖子 -->
+                <!-- LIKE_POST: Like Post -->
                 <template v-if="action.action_type === 'LIKE_POST'">
                   <div class="like-info">
                     <svg class="icon-small filled" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
@@ -200,7 +200,7 @@
                   </div>
                 </template>
 
-                <!-- CREATE_COMMENT: 发表Comments -->
+                <!-- CREATE_COMMENT: Create Comment -->
                 <template v-if="action.action_type === 'CREATE_COMMENT'">
                   <div v-if="action.action_args?.content" class="content-text">
                     {{ action.action_args.content }}
@@ -211,7 +211,7 @@
                   </div>
                 </template>
 
-                <!-- SEARCH_POSTS: Search帖子 -->
+                <!-- SEARCH_POSTS: Search Posts -->
                 <template v-if="action.action_type === 'SEARCH_POSTS'">
                   <div class="search-info">
                     <svg class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -220,7 +220,7 @@
                   </div>
                 </template>
 
-                <!-- FOLLOW: Focus onuse户 -->
+                <!-- FOLLOW: Follow User -->
                 <template v-if="action.action_type === 'FOLLOW'">
                   <div class="follow-info">
                     <svg class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
@@ -240,7 +240,7 @@
                   </div>
                 </template>
 
-                <!-- DO_NOTHING: None操作（静默） -->
+                <!-- DO_NOTHING: No Action (Idle) -->
                 <template v-if="action.action_type === 'DO_NOTHING'">
                   <div class="idle-info">
                     <svg class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
@@ -248,7 +248,7 @@
                   </div>
                 </template>
 
-                <!-- 通use回退：未知Type或Yes content but未被上述Process -->
+                <!-- Fallback: Unknown Type or Has Content but not Processed -->
                 <div v-if="!['CREATE_POST', 'QUOTE_POST', 'REPOST', 'LIKE_POST', 'CREATE_COMMENT', 'SEARCH_POSTS', 'FOLLOW', 'UPVOTE_POST', 'DOWNVOTE_POST', 'DO_NOTHING'].includes(action.action_type) && action.action_args?.content" class="content-text">
                   {{ action.action_args.content }}
                 </div>
@@ -298,7 +298,7 @@ import { generateReport } from '../api/report'
 
 const props = defineProps({
   simulationId: String,
-  maxRounds: Number, // fromStep2传入ofmaximumroundscount
+  maxRounds: Number, // max rounds count passed from Step 2
   minutesPerRound: {
     type: Number,
     default: 30 // Default 30 minutes per round
@@ -314,22 +314,22 @@ const router = useRouter()
 
 // State
 const isGeneratingReport = ref(false)
-const phase = ref(0) // 0: 未Start, 1: Running, 2: Completed
+const phase = ref(0) // 0: Not Started, 1: Running, 2: Completed
 const isStarting = ref(false)
 const isStopping = ref(false)
 const startError = ref(null)
 const runStatus = ref({})
-const allActions = ref([]) // 所Yes动作（增量累积）
-const actionIds = ref(new Set()) // use于go重of动作IDset
+const allActions = ref([]) // All Actions (Incremental Accumulation)
+const actionIds = ref(new Set()) // Action ID set for deduplication
 const scrollContainer = ref(null)
 
 // Computed
-// Bytime顺序显示动作（Latestofin最后面，即底部）
+// Display actions in chronological order (Latest at the bottom)
 const chronologicalActions = computed(() => {
   return allActions.value
 })
 
-// 各Platform动作count
+// Action count per Platform
 const twitterActionsCount = computed(() => {
   return allActions.value.filter(a => a.platform === 'twitter').length
 })
@@ -347,12 +347,12 @@ const formatElapsedTime = (currentRound) => {
   return `${hours}h ${minutes}m`
 }
 
-// TwitterPlatformofSimulation流逝time
+// Twitter Platform Simulation elapsed time
 const twitterElapsedTime = computed(() => {
   return formatElapsedTime(runStatus.value.twitter_current_round || 0)
 })
 
-// RedditPlatformofSimulation流逝time
+// Reddit Platform Simulation elapsed time
 const redditElapsedTime = computed(() => {
   return formatElapsedTime(runStatus.value.reddit_current_round || 0)
 })
@@ -362,7 +362,7 @@ const addLog = (msg) => {
   emit('add-log', msg)
 }
 
-// Reset所Yesstatus（use于重新Start Simulation）
+// Reset all states (for restarting Simulation)
 const resetAllState = () => {
   phase.value = 0
   runStatus.value = {}
@@ -373,7 +373,7 @@ const resetAllState = () => {
   startError.value = null
   isStarting.value = false
   isStopping.value = false
-  stopPolling()  // Stop之前可can存inofrounds询
+  stopPolling()  // Stop any existing polling
 }
 
 // Start Simulation
@@ -383,7 +383,7 @@ const doStartSimulation = async () => {
     return
   }
   
-  // 先Reset所Yesstatus，确保notwill受到上一次Simulationof影响
+  // Reset all states first to ensure no impact from previous simulation
   resetAllState()
   
   isStarting.value = true
@@ -395,13 +395,13 @@ const doStartSimulation = async () => {
     const params = {
       simulation_id: props.simulationId,
       platform: 'parallel',
-      force: true,  // 强制重新Start
-      enable_graph_memory_update: true  // EnableDynamicsGraphUpdate
+      force: true,  // Force Restart
+      enable_graph_memory_update: true  // Enable Dynamic Graph Update
     }
     
     if (props.maxRounds) {
       params.max_rounds = props.maxRounds
-      addLog(`SettingsmaximumSimulationroundscount: ${props.maxRounds}`)
+      addLog(`Settings maximum Simulation rounds count: ${props.maxRounds}`)
     }
     
     addLog('Dynamic graph update mode enabled')
@@ -434,12 +434,12 @@ const doStartSimulation = async () => {
   }
 }
 
-// StopSimulation
+// Stop Simulation
 const handleStopSimulation = async () => {
   if (!props.simulationId) return
   
   isStopping.value = true
-  addLog('In progressStopSimulation...')
+  addLog('Stopping Simulation...')
   
   try {
     const res = await stopSimulation({ simulation_id: props.simulationId })
@@ -459,7 +459,7 @@ const handleStopSimulation = async () => {
   }
 }
 
-// rounds询status
+// Polling status
 let statusTimer = null
 let detailTimer = null
 
@@ -482,7 +482,7 @@ const stopPolling = () => {
   }
 }
 
-// 追踪各Platformof上一次rounds，use于检测Change并输出log
+// Track last round for each platform to detect changes and log
 const prevTwitterRound = ref(0)
 const prevRedditRound = ref(0)
 
@@ -497,7 +497,7 @@ const fetchRunStatus = async () => {
       
       runStatus.value = data
       
-      // 分别检测各PlatformofroundsChange并输出log
+      // Detect round changes for each platform and log
       if (data.twitter_current_round > prevTwitterRound.value) {
         addLog(`[Plaza] R${data.twitter_current_round}/${data.total_rounds} | T:${data.twitter_simulated_hours || 0}h | A:${data.twitter_actions_count}`)
         prevTwitterRound.value = data.twitter_current_round
@@ -508,18 +508,18 @@ const fetchRunStatus = async () => {
         prevRedditRound.value = data.reddit_current_round
       }
       
-      // 检测SimulationYesNoCompleted（through runner_status 或PlatformCompletedstatus判断）
+      // Detect if Simulation is Completed (via runner_status or Platform Completed status)
       const isCompleted = data.runner_status === 'completed' || data.runner_status === 'stopped'
       
-      // 额外check：if后端not yetcome得andUpdate runner_status，butPlatform已经ReportCompleted
-      // through检测 twitter_completed and reddit_completed status判断
+      // Extra check: if backend hasn't updated runner_status yet, but Platform already Report Completed
+      // Check via twitter_completed and reddit_completed status
       const platformsCompleted = checkPlatformsCompleted(data)
       
       if (isCompleted || platformsCompleted) {
         if (platformsCompleted && !isCompleted) {
           addLog('✓ Detected all platforms simulation completed')
         }
-        addLog('✓ SimulationCompleted')
+        addLog('✓ Simulation Completed')
         phase.value = 2
         stopPolling()
         emit('update-status', 'completed')
@@ -530,28 +530,28 @@ const fetchRunStatus = async () => {
   }
 }
 
-// check所YesEnableofPlatformYesNoCompleted
+// Check if all Enabled Platforms are Completed
 const checkPlatformsCompleted = (data) => {
-  // if没Yes任何Platformdata，Back false
+  // If no Platform data, Return false
   if (!data) return false
   
-  // check各PlatformofCompletedstatus
+  // Check Completed status for each Platform
   const twitterCompleted = data.twitter_completed === true
   const redditCompleted = data.reddit_completed === true
   
-  // if至少Yes一unitsPlatformCompleted，checkYesNo所YesEnableofPlatform都Completed
-  // through actions_count 判断PlatformYesNo被Enable（if count > 0 或 running 曾for true）
-  const twitterEnabled = (data.twitter_actions_count > 0) || data.twitter_running || twitterCompleted
-  const redditEnabled = (data.reddit_actions_count > 0) || data.reddit_running || redditCompleted
+  // IMPORTANT: Both platforms must be completed (or have reached their total rounds)
+  // A platform is considered completed if:
+  // 1. Its _completed flag is true, OR
+  // 2. Its current_round equals total_rounds (reached the end)
   
-  // if没Yes任何Platform被Enable，Back false
-  if (!twitterEnabled && !redditEnabled) return false
+  const twitterFinished = twitterCompleted || 
+    (data.twitter_current_round > 0 && data.twitter_current_round >= data.total_rounds)
+  const redditFinished = redditCompleted || 
+    (data.reddit_current_round > 0 && data.reddit_current_round >= data.total_rounds)
   
-  // check所YesEnableofPlatformYesNo都Completed
-  if (twitterEnabled && !twitterCompleted) return false
-  if (redditEnabled && !redditCompleted) return false
-  
-  return true
+  // BOTH platforms must be finished for simulation to be complete
+  // This prevents enabling report generation when only one platform has run
+  return twitterFinished && redditFinished
 }
 
 const fetchRunStatusDetail = async () => {
@@ -561,13 +561,13 @@ const fetchRunStatusDetail = async () => {
     const res = await getRunStatusDetail(props.simulationId)
     
     if (res.success && res.data) {
-      // 使use all_actions getcompleteof动作list
+      // Use all_actions to get complete action list
       const serverActions = res.data.all_actions || []
       
-      // 增量Add新动作（go重）
+      // Incrementally Add New Actions (Deduplication)
       let newActionsAdded = 0
       serverActions.forEach(action => {
-        // Generating唯一ID
+        // Generate Unique ID
         const actionId = action.id || `${action.timestamp}-${action.platform}-${action.agent_id}-${action.action_type}`
         
         if (!actionIds.value.has(actionId)) {
@@ -580,8 +580,8 @@ const fetchRunStatusDetail = async () => {
         }
       })
       
-      // notAutomatic滚动，让use户自由Viewtime轴
-      // 新动作willin底部追加
+      // No Auto Scroll, Let user freely View timeline
+      // New actions will be appended at bottom
     }
   } catch (err) {
     console.warn('getDetailedstatusFailed:', err)
@@ -640,17 +640,17 @@ const formatActionTime = (timestamp) => {
 
 const handleNextStep = async () => {
   if (!props.simulationId) {
-    addLog('Error：缺少 simulationId')
+    addLog('Error: Missing simulationId')
     return
   }
   
   if (isGeneratingReport.value) {
-    addLog('Report Generationrequest已Send，请稍候...')
+    addLog('Report Generation request Sent, Please Wait...')
     return
   }
   
   isGeneratingReport.value = true
-  addLog('In progress启动Report Generation...')
+  addLog('Starting Report Generation...')
   
   try {
     const res = await generateReport({
@@ -660,16 +660,16 @@ const handleNextStep = async () => {
     
     if (res.success && res.data) {
       const reportId = res.data.report_id
-      addLog(`✓ Report Generation任务已启动: ${reportId}`)
+      addLog(`✓ Report Generation Task Started: ${reportId}`)
       
-      // 跳转到Reportpage
+      // Redirect to Report page
       router.push({ name: 'Report', params: { reportId } })
     } else {
-      addLog(`✗ 启动Report GenerationFailed: ${res.error || '未知Error'}`)
+      addLog(`✗ Start Report Generation Failed: ${res.error || 'Unknown Error'}`)
       isGeneratingReport.value = false
     }
   } catch (err) {
-    addLog(`✗ 启动Report Generation异常: ${err.message}`)
+    addLog(`✗ Start Report Generation Exception: ${err.message}`)
     isGeneratingReport.value = false
   }
 }
@@ -685,7 +685,7 @@ watch(() => props.systemLogs?.length, () => {
 })
 
 onMounted(() => {
-  addLog('Step3 Simulation RunInitializing')
+  addLog('Step3 Simulation Run Initializing')
   if (props.simulationId) {
     doStartSimulation()
   }

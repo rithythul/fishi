@@ -1,3 +1,10 @@
+# Fishi
+
+> **Fishi** is a fork of [MiroFish](https://github.com/rithythul/mirofish) with self-hosted **Neo4j** graph database for enhanced privacy and control. 
+> 
+> **Planned Integrations:** Facebook, Instagram, TikTok, and other social media platforms for comprehensive social simulation.
+
+---
 
 ## ⚡ Overview
 

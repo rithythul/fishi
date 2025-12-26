@@ -1,6 +1,6 @@
 """
-LLM客户端封装
-统一useOpenAIformatcall
+LLM client wrapper
+Unified OpenAI-format API calls
 """
 
 import json
@@ -11,7 +11,7 @@ from ..config import Config
 
 
 class LLMClient:
-    """LLM客户端"""
+    """LLM Client"""
     
     def __init__(
         self,
@@ -39,13 +39,13 @@ class LLMClient:
         response_format: Optional[Dict] = None
     ) -> str:
         """
-        send聊天request
+        Send chat request
         
         Args:
-            messages: messagelist
-            temperature: 温度parameters
-            max_tokens: maximumtokencount
-            response_format: responseformat（如JSONmode）
+            messages: Message list
+            temperature: Temperature parameter
+            max_tokens: Maximum token count
+            response_format: Response format (e.g., JSON mode)
             
         Returns:
             Model response text
@@ -61,31 +61,80 @@ class LLMClient:
             kwargs["response_format"] = response_format
         
         response = self.client.chat.completions.create(**kwargs)
-        return response.choices[0].message.content
+        content = response.choices[0].message.content
+        # Ensure we never return None
+        return content if content is not None else ""
     
     def chat_json(
         self,
         messages: List[Dict[str, str]],
         temperature: float = 0.3,
-        max_tokens: int = 4096
+        max_tokens: int = 8192  # Increased from 4096 to handle complex responses
     ) -> Dict[str, Any]:
         """
-        send聊天request并returnJSON
+        Send chat request and return JSON
         
         Args:
-            messages: messagelist
-            temperature: 温度parameters
-            max_tokens: maximumtokencount
+            messages: Message list
+            temperature: Temperature parameter
+            max_tokens: Maximum token count
             
         Returns:
-            parse后ofJSONobject
+            Parsed JSON object
         """
-        response = self.chat(
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            response_format={"type": "json_object"}
-        )
+        from ..utils.logger import get_logger
+        logger = get_logger('fishi.llm_client')
         
-        return json.loads(response)
-
+        try:
+            logger.debug(f"Calling LLM API: model={self.model}, base_url={self.base_url}")
+            
+            response = self.chat(
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                response_format={"type": "json_object"}
+            )
+            
+            logger.debug(f"LLM response received, length: {len(response)} chars")
+            
+            try:
+                parsed = json.loads(response)
+                return parsed
+            except json.JSONDecodeError as e:
+                # Try to repair truncated JSON
+                logger.warning(f"JSON parse failed, attempting repair: {e}")
+                repaired = self._repair_truncated_json(response)
+                return json.loads(repaired)
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse LLM response as JSON: {e}")
+            logger.error(f"Response text: {response[:500] if 'response' in locals() else 'No response'}")
+            raise ValueError(f"LLM returned invalid JSON: {e}")
+        except Exception as e:
+            logger.error(f"LLM API call failed: {type(e).__name__}: {str(e)}")
+            raise
+    
+    def _repair_truncated_json(self, content: str) -> str:
+        """
+        Attempt to repair truncated JSON by closing unclosed brackets
+        """
+        import re
+        
+        content = content.strip()
+        
+        # Count unclosed brackets
+        open_braces = content.count('{') - content.count('}')
+        open_brackets = content.count('[') - content.count(']')
+        
+        # Check for unclosed string - if last meaningful char isn't a quote, comma, bracket
+        if content and content[-1] not in '",}]':
+            # Try to find if we're inside a string value
+            # Look for the pattern ": "value that's incomplete
+            if re.search(r':\s*"[^"]*$', content):
+                content += '"'
+        
+        # Close brackets and braces
+        content += ']' * open_brackets
+        content += '}' * open_braces
+        
+        return content

@@ -122,7 +122,7 @@
         <div class="card-content">
           <p class="api-note">POST /api/graph/build</p>
           <p class="description">
-            Based on the generated ontology, documents are automatically chunked and Zep is called to build knowledge graph, extracting entities and relationships, forming temporal memory and community summaries
+            Based on the generated ontology, documents are automatically chunked and Neo4j is used to build knowledge graph, extracting entities and relationships, forming temporal memory and community summaries
           </p>
           
           <!-- Stats Cards -->
@@ -208,7 +208,7 @@ const selectedOntologyItem = ref(null)
 const logContent = ref(null)
 const creatingSimulation = ref(false)
 
-// EnterEnvironment Setup - Creating simulation 并跳转
+// Enter Environment Setup - Create simulation and navigate
 const handleEnterEnvSetup = async () => {
   if (!props.projectData?.project_id || !props.projectData?.graph_id) {
     console.error('Missing project or graph info')
@@ -226,7 +226,7 @@ const handleEnterEnvSetup = async () => {
     })
     
     if (res.success && res.data?.simulation_id) {
-      // 跳转到 simulation page
+      // Navigate to simulation page
       router.push({
         name: 'Simulation',
         params: { simulationId: res.data.simulation_id }

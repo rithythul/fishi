@@ -1,6 +1,6 @@
 """
-fileparsetool
-supportPDF、Markdown、TXTfileoftext extraction
+File parsing tool
+Supports PDF, Markdown, TXT file text extraction
 """
 
 import os
@@ -9,7 +9,7 @@ from typing import List, Optional
 
 
 class FileParser:
-    """fileparse器"""
+    """File parser"""
     
     SUPPORTED_EXTENSIONS = {'.pdf', '.md', '.markdown', '.txt'}
     
@@ -19,7 +19,7 @@ class FileParser:
         Extract text from file
         
         Args:
-            file_path: file路径
+            file_path: File path
             
         Returns:
             Extracted text content
@@ -27,12 +27,12 @@ class FileParser:
         path = Path(file_path)
         
         if not path.exists():
-            raise FileNotFoundError(f"filenot存in: {file_path}")
+            raise FileNotFoundError(f"File not found: {file_path}")
         
         suffix = path.suffix.lower()
         
         if suffix not in cls.SUPPORTED_EXTENSIONS:
-            raise ValueError(f"notsupportoffileformat: {suffix}")
+            raise ValueError(f"Unsupported file format: {suffix}")
         
         if suffix == '.pdf':
             return cls._extract_from_pdf(file_path)
@@ -41,7 +41,7 @@ class FileParser:
         elif suffix == '.txt':
             return cls._extract_from_txt(file_path)
         
-        raise ValueError(f"无法processingoffileformat: {suffix}")
+        raise ValueError(f"Unable to process file format: {suffix}")
     
     @staticmethod
     def _extract_from_pdf(file_path: str) -> str:
@@ -49,7 +49,7 @@ class FileParser:
         try:
             import fitz  # PyMuPDF
         except ImportError:
-            raise ImportError("需want安装PyMuPDF: pip install PyMuPDF")
+            raise ImportError("PyMuPDF required: pip install PyMuPDF")
         
         text_parts = []
         with fitz.open(file_path) as doc:
@@ -78,7 +78,7 @@ class FileParser:
         Extract and merge text from multiple files
         
         Args:
-            file_paths: file路径list
+            file_paths: List of file paths
             
         Returns:
             Merged text
@@ -89,9 +89,9 @@ class FileParser:
             try:
                 text = cls.extract_text(file_path)
                 filename = Path(file_path).name
-                all_texts.append(f"=== 文档 {i}: {filename} ===\n{text}")
+                all_texts.append(f"=== Document {i}: {filename} ===\n{text}")
             except Exception as e:
-                all_texts.append(f"=== 文档 {i}: {file_path} (Extractfailed: {str(e)}) ===")
+                all_texts.append(f"=== Document {i}: {file_path} (Extraction failed: {str(e)}) ===")
         
         return "\n\n".join(all_texts)
 
@@ -102,15 +102,15 @@ def split_text_into_chunks(
     overlap: int = 50
 ) -> List[str]:
     """
-    Split text into small blocks
+    Split text into smaller chunks
     
     Args:
         text: Original text
-        chunk_size: 每blocksofcharacterscount
-        overlap: 重叠characterscount
+        chunk_size: Number of characters per chunk
+        overlap: Overlap characters
         
     Returns:
-        List of text blocks
+        List of text chunks
     """
     if len(text) <= chunk_size:
         return [text] if text.strip() else []
@@ -121,10 +121,9 @@ def split_text_into_chunks(
     while start < len(text):
         end = start + chunk_size
         
-        # 尝试in句子edge界处split
+        # Try to split at sentence boundaries
         if end < len(text):
-            # 查找最近of句子end符
-            for sep in ['。', '！', '？', '.\n', '!\n', '?\n', '\n\n', '. ', '! ', '? ']:
+            for sep in ['. ', '! ', '? ', '\n\n', '.\n', '!\n', '?\n']:
                 last_sep = text[start:end].rfind(sep)
                 if last_sep != -1 and last_sep > chunk_size * 0.3:
                     end = start + last_sep + len(sep)
@@ -134,8 +133,6 @@ def split_text_into_chunks(
         if chunk:
             chunks.append(chunk)
         
-        # 下一blocksfrom重叠positionstart
         start = end - overlap if end < len(text) else len(text)
     
     return chunks
-

@@ -3,7 +3,7 @@
     <!-- Header -->
     <header class="app-header">
       <div class="header-left">
-        <div class="brand" @click="router.push('/')">MIROFISH</div>
+        <div class="brand" @click="router.push('/')">FISHI</div>
       </div>
       
       <div class="header-center">
@@ -145,14 +145,14 @@ const toggleMaximize = (target) => {
 }
 
 const handleGoBack = async () => {
-  // inGoing back to Step 2 之前，先CloseIn progressRunofSimulation
+  // Before going back to Step 2, close the running simulation first
   addLog('Preparing to go back to Step 2, closing simulation...')
   
-  // Stoprounds询
+  // Stop polling
   stopGraphRefresh()
   
   try {
-    // 先尝试优雅CloseSimulationEnvironment
+    // Try to gracefully close simulation environment first
     const envStatusRes = await getEnvStatus({ simulation_id: currentSimulationId.value })
     
     if (envStatusRes.success && envStatusRes.data?.env_alive) {
@@ -173,7 +173,7 @@ const handleGoBack = async () => {
         }
       }
     } else {
-      // Environment未Run，checkYesNo需wantStop进程
+      // Environment is not running, check if process needs stopping
       if (isSimulating.value) {
         addLog('Stopping simulation process...')
         try {
@@ -188,13 +188,14 @@ const handleGoBack = async () => {
     addLog(`Failed to check simulation status: ${err.message}`)
   }
   
-  // Back到 Step 2 (Environment Setup)
+  
+  // Go back to Step 2 (Environment Setup)
   router.push({ name: 'Simulation', params: { simulationId: currentSimulationId.value } })
 }
 
 const handleNextStep = () => {
-  // Step3Simulation 组件will直接ProcessReport Generatingand路由跳转
-  // thisunitsmethod仅作for备use
+  // Step3Simulation component will handle Report Generating and routing directly
+  // This parent method is for backup only
   addLog('Entering Step 4: Report generation')
 }
 
@@ -203,12 +204,12 @@ const loadSimulationData = async () => {
   try {
     addLog(`Loading simulation data: ${currentSimulationId.value}`)
     
-    // get simulation Info
+      // get simulation info
     const simRes = await getSimulation(currentSimulationId.value)
     if (simRes.success && simRes.data) {
       const simData = simRes.data
       
-      // get simulation config 以get minutes per round_per_round
+      // Get simulation config to fetch minutes_per_round
       try {
         const configRes = await getSimulationConfig(currentSimulationId.value)
         if (configRes.success && configRes.data?.time_config?.minutes_per_round) {
@@ -216,17 +217,17 @@ const loadSimulationData = async () => {
           addLog(`Time configuration:  ${minutesPerRound.value} minutes per round`)
         }
       } catch (configErr) {
-        addLog(`Failed to get time configuration, using default: ${minutesPerRound.value}minutes/round`)
+        addLog(`Failed to get time configuration, using default: ${minutesPerRound.value} minutes/round`)
       }
       
-      // get project Info
+      // Get project info
       if (simData.project_id) {
         const projRes = await getProject(simData.project_id)
         if (projRes.success && projRes.data) {
           projectData.value = projRes.data
           addLog(`Project loaded successfully: ${projRes.data.project_id}`)
           
-          // get graph data
+          // Get graph data
           if (projRes.data.graph_id) {
             await loadGraph(projRes.data.graph_id)
           }
@@ -241,8 +242,8 @@ const loadSimulationData = async () => {
 }
 
 const loadGraph = async (graphId) => {
-  // 当In progressSimulation时，AutomaticRefreshnot显示全屏 loading，以免闪烁
-  // 手动Refresh或InitialLoading时显示 loading
+  // When simulating, automatic refresh does not show full screen loading to avoid flickering
+  // Show loading on manual refresh or initial load
   if (!isSimulating.value) {
     graphLoading.value = true
   }
@@ -274,7 +275,7 @@ let graphRefreshTimer = null
 const startGraphRefresh = () => {
   if (graphRefreshTimer) return
   addLog('Enable graph real-time refresh (30s)')
-  // 立即Refresh一次，然后每30秒Refresh
+  // Refresh immediately once, then refresh every 30 seconds
   graphRefreshTimer = setInterval(refreshGraph, 30000)
 }
 
@@ -297,7 +298,7 @@ watch(isSimulating, (newValue) => {
 onMounted(() => {
   addLog('SimulationRunView initialized')
   
-  // record maxRounds configuration（value已inInitializing时from query parametersget）
+  // Record maxRounds configuration (value already obtained from query params during initialization)
   if (maxRounds.value) {
     addLog(`Custom simulation rounds: ${maxRounds.value}`)
   }

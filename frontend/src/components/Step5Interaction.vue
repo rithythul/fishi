@@ -154,7 +154,7 @@
               <div class="tools-card-avatar">R</div>
               <div class="tools-card-info">
                 <div class="tools-card-name">Report Agent - Chat</div>
-                <div class="tools-card-subtitle">Report GenerationIntelligent体ofQuickto话版本，可调use 4 种Professional工具，拥YesMiroFishofcomplete记忆</div>
+                <div class="tools-card-subtitle">Quick chat version of Report Agent, can use 4 professional tools with full Fishi memory</div>
               </div>
               <button class="tools-card-toggle" @click="showToolsDetail = !showToolsDetail">
                 <svg :class="{ 'is-expanded': showToolsDetail }" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -171,8 +171,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">InsightForge Deep归因</div>
-                    <div class="tool-desc">to齐现实世界SeeddatawithSimulationEnvironmentstatus，结合Global/Local Memory机制，Provide跨时空ofDeep归因Analyze</div>
+                    <div class="tool-name">InsightForge Deep Analysis</div>
+                    <div class="tool-desc">Aligns real-world seed data with simulation environment status, combining Global/Local Memory for deep cross-temporal analysis</div>
                   </div>
                 </div>
                 <div class="tool-item tool-blue">
@@ -183,8 +183,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">PanoramaSearch panorama追踪</div>
-                    <div class="tool-desc">基于图结构of广度遍历Algorithm，重构事件传播路径，catch全量Info流动of拓扑结构</div>
+                    <div class="tool-name">PanoramaSearch Tracking</div>
+                    <div class="tool-desc">Graph-based breadth traversal algorithm, reconstructs event propagation paths, captures complete info flow topology</div>
                   </div>
                 </div>
                 <div class="tool-item tool-orange">
@@ -194,8 +194,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">QuickSearch Quick检索</div>
-                    <div class="tool-desc">基于 GraphRAG of即时Queryinterface，Optimizeindex效率，use于QuickExtract具体ofNodesattributeswith离散facts</div>
+                    <div class="tool-name">QuickSearch Retrieval</div>
+                    <div class="tool-desc">GraphRAG-based instant query interface, optimized indexing for quick extraction of specific node attributes and discrete facts</div>
                   </div>
                 </div>
                 <div class="tool-item tool-green">
@@ -207,8 +207,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">InterviewSubAgent 虚拟访谈</div>
-                    <div class="tool-desc">自主式访谈，can够并行withSimulation世界中units体进行多roundsto话，采集非结构化ofPerspectivedatawith心理status</div>
+                    <div class="tool-name">InterviewSubAgent Virtual Interview</div>
+                    <div class="tool-desc">Autonomous interviews that can conduct parallel multi-round conversations with agents, collecting unstructured perspective data and psychological states</div>
                   </div>
                 </div>
               </div>
@@ -249,7 +249,7 @@
                 </svg>
               </div>
               <p class="empty-text">
-                {{ chatTarget === 'report_agent' ? 'with Report Agent to话，In-depth解Reportcontent' : 'withSimulationunits体to话，understand their perspective' }}
+                {{ chatTarget === 'report_agent' ? 'Chat with Report Agent to understand report content in depth' : 'Chat with simulation agents to understand their perspective' }}
               </p>
             </div>
             <div 
@@ -291,7 +291,7 @@
             <textarea 
               v-model="chatInput"
               class="chat-input"
-              placeholder="输入您ofProblem..."
+              placeholder="Enter your question..."
               @keydown.enter.exact.prevent="sendMessage"
               :disabled="isSending || (!selectedAgent && chatTarget === 'agent')"
               rows="1"
@@ -316,8 +316,8 @@
           <div class="survey-setup">
             <div class="setup-section">
               <div class="section-header">
-                <span class="section-title">选择调查to象</span>
-                <span class="selection-count">已选 {{ selectedAgents.size }} / {{ profiles.length }}</span>
+                <span class="section-title">Select Survey Targets</span>
+                <span class="selection-count">Selected {{ selectedAgents.size }} / {{ profiles.length }}</span>
               </div>
               <div class="agents-grid">
                 <label 
@@ -352,12 +352,12 @@
 
             <div class="setup-section">
               <div class="section-header">
-                <span class="section-title">问卷Problem</span>
+                <span class="section-title">Survey Question</span>
               </div>
               <textarea 
                 v-model="surveyQuestion"
                 class="survey-input"
-                placeholder="输入您want问所Yes被Selectedto象ofProblem..."
+                placeholder="Enter the question you want to ask the selected subjects..."
                 rows="3"
               ></textarea>
             </div>
@@ -368,15 +368,15 @@
               @click="submitSurvey"
             >
               <span v-if="isSurveying" class="loading-spinner"></span>
-              <span v-else>Send问卷</span>
+              <span v-else>Send Survey</span>
             </button>
           </div>
 
           <!-- Survey Results -->
           <div v-if="surveyResults.length > 0" class="survey-results">
             <div class="results-header">
-              <span class="results-title">调查result</span>
-              <span class="results-count">{{ surveyResults.length }} itemsReply</span>
+              <span class="results-title">Survey Results</span>
+              <span class="results-count">{{ surveyResults.length }} responses</span>
             </div>
             <div class="results-list">
               <div 
@@ -433,7 +433,7 @@ const showToolsDetail = ref(true)
 // Chat State
 const chatInput = ref('')
 const chatHistory = ref([])
-const chatHistoryCache = ref({}) // 缓存所Yesto话record: { 'report_agent': [], 'agent_0': [], 'agent_1': [], ... }
+const chatHistoryCache = ref({}) // Cached chat history: { 'report_agent': [], 'agent_0': [], 'agent_1': [], ... }
 const isSending = ref(false)
 const chatMessages = ref(null)
 const chatInputRef = ref(null)
@@ -483,7 +483,7 @@ const selectChatTarget = (target) => {
   }
 }
 
-// SaveCurrentto话record到缓存
+// Save current chat history to cache
 const saveChatHistory = () => {
   if (chatHistory.value.length === 0) return
   
@@ -495,7 +495,7 @@ const saveChatHistory = () => {
 }
 
 const selectReportAgentChat = () => {
-  // SaveCurrentto话record
+  // Save current chat history
   saveChatHistory()
   
   activeTab.value = 'chat'
@@ -504,7 +504,7 @@ const selectReportAgentChat = () => {
   selectedAgentIndex.value = null
   showAgentDropdown.value = false
   
-  // Restore Report Agent ofto话record
+  // Restore Report Agent chat history
   chatHistory.value = chatHistoryCache.value['report_agent'] || []
 }
 
@@ -524,7 +524,7 @@ const toggleAgentDropdown = () => {
 }
 
 const selectAgent = (agent, idx) => {
-  // SaveCurrentto话record
+  // Save current chat history
   saveChatHistory()
   
   selectedAgent.value = agent
@@ -532,7 +532,7 @@ const selectAgent = (agent, idx) => {
   chatTarget.value = 'agent'
   showAgentDropdown.value = false
   
-  // Restore该 Agent ofto话record
+  // Restore this Agent's chat history
   chatHistory.value = chatHistoryCache.value[`agent_${idx}`] || []
   addLog(`Select Chat Target: ${agent.username}`)
 }
@@ -562,7 +562,7 @@ const renderMarkdown = (content) => {
   html = html.replace(/^# (.+)$/gm, '<h2 class="md-h2">$1</h2>')
   html = html.replace(/^> (.+)$/gm, '<blockquote class="md-quote">$1</blockquote>')
   
-  // Processlist - Support子list
+  // Process list - Support sub-list
   html = html.replace(/^(\s*)- (.+)$/gm, (match, indent, text) => {
     const level = Math.floor(indent.length / 2)
     return `<li class="md-li" data-level="${level}">${text}</li>`
@@ -572,17 +572,17 @@ const renderMarkdown = (content) => {
     return `<li class="md-oli" data-level="${level}">${text}</li>`
   })
   
-  // package装NoneSequence表
+  // Wrap Unordered List
   html = html.replace(/(<li class="md-li"[^>]*>.*?<\/li>\s*)+/g, '<ul class="md-ul">$&</ul>')
-  // package装YesSequence表
+  // Wrap Ordered List
   html = html.replace(/(<li class="md-oli"[^>]*>.*?<\/li>\s*)+/g, '<ol class="md-ol">$&</ol>')
   
-  // 清理list项之间of所Yes空白
+  // Clean all whitespace between list items
   html = html.replace(/<\/li>\s+<li/g, '</li><li')
-  // 清理listStartlabel后of空白
+  // Clean whitespace after list start tag
   html = html.replace(/<ul class="md-ul">\s+/g, '<ul class="md-ul">')
   html = html.replace(/<ol class="md-ol">\s+/g, '<ol class="md-ol">')
-  // 清理listendlabel前of空白
+  // Clean whitespace before list end tag
   html = html.replace(/\s+<\/ul>/g, '</ul>')
   html = html.replace(/\s+<\/ol>/g, '</ol>')
   
@@ -598,12 +598,12 @@ const renderMarkdown = (content) => {
   html = html.replace(/(<\/h[2-5]>)<\/p>/g, '$1')
   html = html.replace(/<p class="md-p">(<ul|<ol|<blockquote|<pre|<hr)/g, '$1')
   html = html.replace(/(<\/ul>|<\/ol>|<\/blockquote>|<\/pre>)<\/p>/g, '$1')
-  // 清理list前后of <br> label
+  // Clean <br> tags before and after list
   html = html.replace(/<br>\s*(<ul|<ol)/g, '$1')
   html = html.replace(/(<\/ul>|<\/ol>)\s*<br>/g, '$1')
-  // 清理连续of <br> label
+  // Clean consecutive <br> tags
   html = html.replace(/(<br>\s*){2,}/g, '<br>')
-  // 清理list后紧跟of段落Startlabel前of <br>
+  // Clean <br> before paragraph start tag immediately following list
   html = html.replace(/(<\/ol>|<\/ul>)<br>(<p|<div)/g, '$1$2')
   
   return html
@@ -636,19 +636,19 @@ const sendMessage = async () => {
     addLog(`SendFailed: ${err.message}`)
     chatHistory.value.push({
       role: 'assistant',
-      content: `抱歉，发生Error: ${err.message}`,
+      content: `Sorry, an error occurred: ${err.message}`,
       timestamp: new Date().toISOString()
     })
   } finally {
     isSending.value = false
     scrollToBottom()
-    // AutomaticSaveto话record到缓存
+    // Automatically save chat history to cache
     saveChatHistory()
   }
 }
 
 const sendToReportAgent = async (message) => {
-  addLog(`向 Report Agent Send: ${message.substring(0, 50)}...`)
+  addLog(`Sending to Report Agent: ${message.substring(0, 50)}...`)
   
   // Build chat history for API
   const historyForApi = chatHistory.value
@@ -668,21 +668,21 @@ const sendToReportAgent = async (message) => {
   if (res.success && res.data) {
     chatHistory.value.push({
       role: 'assistant',
-      content: res.data.response || res.data.answer || 'NoneResponse',
+      content: res.data.response || res.data.answer || 'No Response',
       timestamp: new Date().toISOString()
     })
-    addLog('Report Agent 已Reply')
+    addLog('Report Agent has replied')
   } else {
-    throw new Error(res.error || 'requestFailed')
+    throw new Error(res.error || 'Request Failed')
   }
 }
 
 const sendToAgent = async (message) => {
   if (!selectedAgent.value || selectedAgentIndex.value === null) {
-    throw new Error('请先选择一unitsSimulationunits体')
+    throw new Error('Please select a simulation agent first')
   }
   
-  addLog(`向 ${selectedAgent.value.username} Send: ${message.substring(0, 50)}...`)
+  addLog(`Sending to ${selectedAgent.value.username}: ${message.substring(0, 50)}...`)
   
   // Build prompt with chat history
   let prompt = message
@@ -690,9 +690,9 @@ const sendToAgent = async (message) => {
     const historyContext = chatHistory.value
       .filter(msg => msg.content !== message)
       .slice(-6)
-      .map(msg => `${msg.role === 'user' ? '提问者' : 'you'}：${msg.content}`)
+      .map(msg => `${msg.role === 'user' ? 'Interviewer' : 'You'}: ${msg.content}`)
       .join('\n')
-    prompt = `以下YesI们之前ofto话：\n${historyContext}\n\n现inIof新ProblemYes：${message}`
+    prompt = `Here is our previous conversation:\n${historyContext}\n\nMy new question is: ${message}`
   }
   
   const res = await interviewAgents({
@@ -704,17 +704,17 @@ const sendToAgent = async (message) => {
   })
   
   if (res.success && res.data) {
-    // 正确ofdata路径: res.data.result.results Yes一unitsto象dictionary
-    // Format: {"twitter_0": {...}, "reddit_0": {...}} 或单Platform {"reddit_0": {...}}
+    // Correct data path: res.data.result.results is an object dictionary
+    // Format: {"twitter_0": {...}, "reddit_0": {...}} or single platform {"reddit_0": {...}}
     const resultData = res.data.result || res.data
     const resultsDict = resultData.results || resultData
     
-    // 将to象dictionaryconvertforarray，优先get reddit PlatformofReply
+    // Convert object dictionary to array, prioritize reddit platform reply
     let responseContent = null
     const agentId = selectedAgentIndex.value
     
     if (typeof resultsDict === 'object' && !Array.isArray(resultsDict)) {
-      // 优先使use reddit PlatformReply，其次 twitter
+      // Prioritize Reddit platform reply, then Twitter
       const redditKey = `reddit_${agentId}`
       const twitterKey = `twitter_${agentId}`
       const agentResult = resultsDict[redditKey] || resultsDict[twitterKey] || Object.values(resultsDict)[0]
@@ -732,12 +732,12 @@ const sendToAgent = async (message) => {
         content: responseContent,
         timestamp: new Date().toISOString()
       })
-      addLog(`${selectedAgent.value.username} 已Reply`)
+      addLog(`${selectedAgent.value.username} has replied`)
     } else {
-      throw new Error('NoneResponsedata')
+      throw new Error('No response data')
     }
   } else {
-    throw new Error(res.error || 'requestFailed')
+    throw new Error(res.error || 'Request Failed')
   }
 }
 
@@ -774,7 +774,7 @@ const submitSurvey = async () => {
   if (selectedAgents.value.size === 0 || !surveyQuestion.value.trim()) return
   
   isSurveying.value = true
-  addLog(`Send问卷give ${selectedAgents.value.size} unitsto象...`)
+  addLog(`Sending survey to ${selectedAgents.value.size} subjects...`)
   
   try {
     const interviews = Array.from(selectedAgents.value).map(idx => ({
@@ -788,33 +788,33 @@ const submitSurvey = async () => {
     })
     
     if (res.success && res.data) {
-      // 正确ofdata路径: res.data.result.results Yes一unitsto象dictionary
+      // Correct data path: res.data.result.results is an object dictionary
       // Format: {"twitter_0": {...}, "reddit_0": {...}, "twitter_1": {...}, ...}
       const resultData = res.data.result || res.data
       const resultsDict = resultData.results || resultData
       
-      // 将to象dictionaryconvertforarrayFormat
+      // Convert object dictionary to array format
       const surveyResultsList = []
       
       for (const interview of interviews) {
         const agentIdx = interview.agent_id
         const agent = profiles.value[agentIdx]
         
-        // 优先使use reddit PlatformReply，其次 twitter
-        let responseContent = 'NoneResponse'
+        // Prioritize Reddit platform reply, then Twitter
+        let responseContent = 'No Response'
         
         if (typeof resultsDict === 'object' && !Array.isArray(resultsDict)) {
           const redditKey = `reddit_${agentIdx}`
           const twitterKey = `twitter_${agentIdx}`
           const agentResult = resultsDict[redditKey] || resultsDict[twitterKey]
           if (agentResult) {
-            responseContent = agentResult.response || agentResult.answer || 'NoneResponse'
+            responseContent = agentResult.response || agentResult.answer || 'No Response'
           }
         } else if (Array.isArray(resultsDict)) {
-          // CompatiblearrayFormat
+          // Compatible array format
           const matchedResult = resultsDict.find(r => r.agent_id === agentIdx)
           if (matchedResult) {
-            responseContent = matchedResult.response || matchedResult.answer || 'NoneResponse'
+            responseContent = matchedResult.response || matchedResult.answer || 'No Response'
           }
         }
         
@@ -828,12 +828,12 @@ const submitSurvey = async () => {
       }
       
       surveyResults.value = surveyResultsList
-      addLog(`收到 ${surveyResults.value.length} itemsReply`)
+      addLog(`Received ${surveyResults.value.length} replies`)
     } else {
-      throw new Error(res.error || 'requestFailed')
+      throw new Error(res.error || 'Request Failed')
     }
   } catch (err) {
-    addLog(`问卷SendFailed: ${err.message}`)
+    addLog(`Survey failed to send: ${err.message}`)
   } finally {
     isSurveying.value = false
   }
@@ -844,7 +844,7 @@ const loadReportData = async () => {
   if (!props.reportId) return
   
   try {
-    addLog(`LoadingReportdata: ${props.reportId}`)
+    addLog(`Loading report data: ${props.reportId}`)
     
     // Get report info
     const reportRes = await getReport(props.reportId)
@@ -853,7 +853,7 @@ const loadReportData = async () => {
       await loadAgentLogs()
     }
   } catch (err) {
-    addLog(`LoadingReportFailed: ${err.message}`)
+    addLog(`Failed to load report: ${err.message}`)
   }
 }
 
@@ -875,10 +875,10 @@ const loadAgentLogs = async () => {
         }
       })
       
-      addLog('ReportdataLoading Completed')
+      addLog('Report data loading completed')
     }
   } catch (err) {
-    addLog(`LoadingReportlogFailed: ${err.message}`)
+    addLog(`Failed to load report logs: ${err.message}`)
   }
 }
 
@@ -889,10 +889,10 @@ const loadProfiles = async () => {
     const res = await getSimulationProfilesRealtime(props.simulationId, 'reddit')
     if (res.success && res.data) {
       profiles.value = res.data.profiles || []
-      addLog(`Loading ${profiles.value.length} unitsSimulationunits体`)
+      addLog(`Loading ${profiles.value.length} simulation agents`)
     }
   } catch (err) {
-    addLog(`LoadingSimulationunits体Failed: ${err.message}`)
+    addLog(`Failed to load simulation agents: ${err.message}`)
   }
 }
 
@@ -906,7 +906,7 @@ const handleClickOutside = (e) => {
 
 // Lifecycle
 onMounted(() => {
-  addLog('Step5 Deep InteractionInitializing')
+  addLog('Step5 Deep Interaction Initializing')
   loadReportData()
   loadProfiles()
   document.addEventListener('click', handleClickOutside)
@@ -951,7 +951,7 @@ watch(() => props.simulationId, (newId) => {
   overflow: hidden;
 }
 
-/* Left Panel - Report Style (with Step4Report.vue 完全一致) */
+/* Left Panel - Report Style (Fully consistent with Step4Report.vue) */
 .left-panel.report-style {
   width: 45%;
   min-width: 450px;
@@ -1602,6 +1602,7 @@ watch(() => props.simulationId, (newId) => {
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1999,7 +2000,7 @@ watch(() => props.simulationId, (newId) => {
   margin-bottom: 0;
 }
 
-/* FIXMEYesSequence表编号 - 使use CSS count器让多units ol 连续编号 */
+/* FIXME Sequence List Numbering - Use CSS counters for continuous numbering of multiple ol units */
 .message-text {
   counter-reset: list-counter;
 }
@@ -2025,7 +2026,7 @@ watch(() => props.simulationId, (newId) => {
   flex-shrink: 0;
 }
 
-/* NoneSequence表样式 */
+/* Unordered List Styles */
 .message-text :deep(.md-ul) {
   padding-left: 20px;
   margin: 8px 0;
@@ -2504,7 +2505,7 @@ watch(() => props.simulationId, (newId) => {
   margin: 6px 0;
 }
 
-/* 聊天/问卷区域of引use样式 */
+/* Chat/Survey Area Quote Styles */
 .chat-messages :deep(.md-quote),
 .result-answer :deep(.md-quote) {
   margin: 12px 0;

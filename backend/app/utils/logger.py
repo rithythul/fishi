@@ -1,6 +1,6 @@
 """
-logconfiguremodule
-提供统一oflog管理，同时输出到控制台andfile
+Logger Configuration Module
+Provides unified logging management with output to both console and file
 """
 
 import os
@@ -9,36 +9,36 @@ from datetime import datetime
 from logging.handlers import RotatingFileHandler
 
 
-# logdirectory
+# Log directory
 LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
 
 
-def setup_logger(name: str = 'mirofish', level: int = logging.DEBUG) -> logging.Logger:
+def setup_logger(name: str = 'fishi', level: int = logging.DEBUG) -> logging.Logger:
     """
-    setlog器
+    Set up a logger with file and console handlers.
     
     Args:
-        name: log器名称
-        level: log级别
+        name: Logger name
+        level: Log level
         
     Returns:
-        configure好oflog器
+        Configured logger instance
     """
-    # 确保logdirectory存in
+    # Ensure log directory exists
     os.makedirs(LOG_DIR, exist_ok=True)
     
-    # createlog器
+    # Create logger
     logger = logging.getLogger(name)
     logger.setLevel(level)
     
-    # 阻止log向upload播到根 logger，避免重复输出
+    # Prevent log propagation to root logger to avoid duplicate output
     logger.propagate = False
     
-    # ifalready经haveprocessing器，not重复添加
+    # If handlers already exist, don't add duplicates
     if logger.handlers:
         return logger
     
-    # logformat
+    # Log formatters
     detailed_formatter = logging.Formatter(
         '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
@@ -49,7 +49,7 @@ def setup_logger(name: str = 'mirofish', level: int = logging.DEBUG) -> logging.
         datefmt='%H:%M:%S'
     )
     
-    # 1. fileprocessing器 - detailedlog（Bydate命名，带轮转）
+    # 1. File handler - detailed logs (named by date, with rotation)
     log_filename = datetime.now().strftime('%Y-%m-%d') + '.log'
     file_handler = RotatingFileHandler(
         os.path.join(LOG_DIR, log_filename),
@@ -60,27 +60,27 @@ def setup_logger(name: str = 'mirofish', level: int = logging.DEBUG) -> logging.
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(detailed_formatter)
     
-    # 2. 控制台processing器 - 简洁log（INFOand以上）
+    # 2. Console handler - concise logs (INFO and above)
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(simple_formatter)
     
-    # 添加processing器
+    # Add handlers
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
     
     return logger
 
 
-def get_logger(name: str = 'mirofish') -> logging.Logger:
+def get_logger(name: str = 'fishi') -> logging.Logger:
     """
-    getlog器（ifnot存in则create）
+    Get a logger (create if not exists).
     
     Args:
-        name: log器名称
+        name: Logger name
         
     Returns:
-        log器instance
+        Logger instance
     """
     logger = logging.getLogger(name)
     if not logger.handlers:
@@ -88,15 +88,15 @@ def get_logger(name: str = 'mirofish') -> logging.Logger:
     return logger
 
 
-# create默认log器
+# Create default logger
 logger = setup_logger()
 
 
-# 便捷method
+# Convenience methods
 def debug(msg, *args, **kwargs):
     logger.debug(msg, *args, **kwargs)
 
-def information(msg, *args, **kwargs):
+def info(msg, *args, **kwargs):
     logger.info(msg, *args, **kwargs)
 
 def warning(msg, *args, **kwargs):
@@ -107,4 +107,3 @@ def error(msg, *args, **kwargs):
 
 def critical(msg, *args, **kwargs):
     logger.critical(msg, *args, **kwargs)
-

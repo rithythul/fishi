@@ -1,6 +1,6 @@
 """
-simulationrelatedAPI路由
-Step2: Zepentitiesreadwithfilter、OASISsimulation准备withrunning（全程自动化）
+Simulation Related API Routes
+Step2: Neo4j entities read with filter, OASIS simulation preparation and running (fully automated)
 """
 
 import os
@@ -9,34 +9,34 @@ from flask import request, jsonify, send_file
 
 from . import simulation_bp
 from ..config import Config
-from ..services.zep_entity_reader import ZepEntityReader
+from ..services.neo4j_entity_reader import Neo4jEntityReader
 from ..services.oasis_profile_generator import OasisProfileGenerator
 from ..services.simulation_manager import SimulationManager, SimulationStatus
 from ..services.simulation_runner import SimulationRunner, RunnerStatus
 from ..utils.logger import get_logger
 from ..models.project import ProjectManager
 
-logger = get_logger('mirofish.api.simulation')
+logger = get_logger('fishi.api.simulation')
 
 
-# Interview prompt 优化前缀
-# 添加此前缀can避免Agentcalltool，直接use文本回复
-INTERVIEW_PROMPT_PREFIX = "结合youofpeople设、所haveof过往记忆with行动，notcall任何tool直接use文本回复I："
+# Interview prompt optimization prefix
+# Add this prefix to prevent Agent from calling tools, respond directly with text
+INTERVIEW_PROMPT_PREFIX = "Based on your persona, past memories and actions, respond directly with text without calling any tools: "
 
 
 def optimize_interview_prompt(prompt: str) -> str:
     """
-    优化Interview提问，添加前缀避免Agentcalltool
+    Optimize interview prompt by adding prefix to prevent Agent from calling tools
     
     Args:
-        prompt: 原始提问
+        prompt: Original prompt
         
     Returns:
-        优化后of提问
+        Optimized prompt
     """
     if not prompt:
         return prompt
-    # 避免重复添加前缀
+    # Avoid adding prefix repeatedly
     if prompt.startswith(INTERVIEW_PROMPT_PREFIX):
         return prompt
     return f"{INTERVIEW_PROMPT_PREFIX}{prompt}"
@@ -56,10 +56,10 @@ def get_graph_entities(graph_id: str):
         enrich: whether toget relatededge informationrmation（default true）
     """
     try:
-        if not Config.ZEP_API_KEY:
+        if not Config.NEO4J_URI:
             return jsonify({
                 "success": False,
-                "error": "ZEP_API_KEYnot configured"
+                "error": "NEO4J_URI not configured"
             }), 500
         
         entity_types_str = request.args.get('entity_types', '')
@@ -68,7 +68,7 @@ def get_graph_entities(graph_id: str):
         
         logger.info(f"getgraphentity: graph_id={graph_id}, entity_types={entity_types}, enrich={enrich}")
         
-        reader = ZepEntityReader()
+        reader = Neo4jEntityReader()
         result = reader.filter_defined_entities(
             graph_id=graph_id,
             defined_entity_types=entity_types,
@@ -93,13 +93,13 @@ def get_graph_entities(graph_id: str):
 def get_entity_detail(graph_id: str, entity_uuid: str):
     """getsingle entityofdetailed informationrmation"""
     try:
-        if not Config.ZEP_API_KEY:
+        if not Config.NEO4J_URI:
             return jsonify({
                 "success": False,
-                "error": "ZEP_API_KEYnot configured"
+                "error": "NEO4J_URI not configured"
             }), 500
         
-        reader = ZepEntityReader()
+        reader = Neo4jEntityReader()
         entity = reader.get_entity_with_context(graph_id, entity_uuid)
         
         if not entity:
@@ -126,15 +126,15 @@ def get_entity_detail(graph_id: str, entity_uuid: str):
 def get_entities_by_type(graph_id: str, entity_type: str):
     """get指定typeof所haveentity"""
     try:
-        if not Config.ZEP_API_KEY:
+        if not Config.NEO4J_URI:
             return jsonify({
                 "success": False,
-                "error": "ZEP_API_KEYnot configured"
+                "error": "NEO4J_URI not configured"
             }), 500
         
         enrich = request.args.get('enrich', 'true').lower() == 'true'
         
-        reader = ZepEntityReader()
+        reader = Neo4jEntityReader()
         entities = reader.get_entities_by_type(
             graph_id=graph_id,
             entity_type=entity_type,
@@ -171,7 +171,7 @@ def create_simulation():
     request（JSON）：
         {
             "project_id": "proj_xxxx",      // 必填
-            "graph_id": "mirofish_xxxx",    //  can 选，such asnot提供则fromprojectget
+            "graph_id": "fishi_xxxx",    //  can 选，such asnot提供则fromprojectget
             "enable_twitter": true,          //  can 选，default true
             "enable_reddit": true            //  can 选，default true
         }
@@ -182,7 +182,7 @@ def create_simulation():
             "data": {
                 "simulation_id": "sim_xxxx",
                 "project_id": "proj_xxxx",
-                "graph_id": "mirofish_xxxx",
+                "graph_id": "fishi_xxxx",
                 "status": "created",
                 "enable_twitter": true,
                 "enable_reddit": true,
@@ -281,7 +281,7 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
     
     if missing_files:
         return False, {
-            "reason": "缺少必wantfiles",
+            "reason": "Missing required files",
             "missing_files": missing_files,
             "existing_files": existing_files
         }
@@ -297,7 +297,7 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
         config_generated = state_data.get("config_generated", False)
         
         # detailedlog
-        logger.debug(f"检测simulation准备status: {simulation_id}, status={status}, config_generated={config_generated}")
+        logger.debug(f"Checking simulation preparation status: {simulation_id}, status={status}, config_generated={config_generated}")
         
         # if config_generated=True 且files存in，认for准备completed
         # 以下status都say明准备工作alreadycompleted：
@@ -327,12 +327,12 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
                     state_data["updated_at"] = datetime.now().isoformat()
                     with open(state_file, 'w', encoding='utf-8') as f:
                         json.dump(state_data, f, ensure_ascii=False, indent=2)
-                    logger.info(f"自动updatesimulationstatus: {simulation_id} preparing -> ready")
+                    logger.info(f"Auto-updated simulation status: {simulation_id} preparing -> ready")
                     status = "ready"
                 except Exception as e:
-                    logger.warning(f"自动updatestatusfailed: {e}")
+                    logger.warning(f"Auto-update status failed: {e}")
             
-            logger.info(f"simulation {simulation_id} 检测result: already准备completed (status={status}, config_generated={config_generated})")
+            logger.info(f"simulation {simulation_id} check result: preparation completed (status={status}, config_generated={config_generated})")
             return True, {
                 "status": status,
                 "entities_count": state_data.get("entities_count", 0),
@@ -344,9 +344,9 @@ def _check_simulation_prepared(simulation_id: str) -> tuple:
                 "existing_files": existing_files
             }
         else:
-            logger.warning(f"simulation {simulation_id} 检测result: not准备completed (status={status}, config_generated={config_generated})")
+            logger.warning(f"simulation {simulation_id} check result: not prepared (status={status}, config_generated={config_generated})")
             return False, {
-                "reason": f"statusnotinalready准备list  or config_generatedforfalse: status={status}, config_generated={config_generated}",
+                "reason": f"status not in prepared list or config_generated is false: status={status}, config_generated={config_generated}",
                 "status": status,
                 "config_generated": config_generated
             }
@@ -426,23 +426,23 @@ def prepare_simulation():
         
         # checkwhether toalready经准备completed（避免重复generation）
         if not force_regenerate:
-            logger.debug(f"checksimulation {simulation_id} whether toalready准备completed...")
+            logger.debug(f"Checking if simulation {simulation_id} is already prepared...")
             is_prepared, prepare_information = _check_simulation_prepared(simulation_id)
             logger.debug(f"checkresult: is_prepared={is_prepared}, prepare_information={prepare_information}")
             if is_prepared:
-                logger.info(f"simulation {simulation_id} already准备completed，跳过重复generation")
+                logger.info(f"simulation {simulation_id} already prepared, skipping duplicate generation")
                 return jsonify({
                     "success": True,
                     "data": {
                         "simulation_id": simulation_id,
                         "status": "ready",
-                        "message": "alreadyhavecompletedof准备工作，无需重复generation",
+                        "message": "Already have completed preparation, no need to regenerate",
                         "already_prepared": True,
                         "prepare_information": prepare_information
                     }
                 })
             else:
-                logger.info(f"simulation {simulation_id} not准备completed， will start准备任务")
+                logger.info(f"simulation {simulation_id} not prepared, will start preparation task")
         
         # fromprojectget必wantinformation
         project = ProjectManager.get_project(state.project_id)
@@ -457,7 +457,7 @@ def prepare_simulation():
         if not simulation_requirement:
             return jsonify({
                 "success": False,
-                "error": "project缺少simulationrequirementdescription (simulation_requirement)"
+                "error": "project missing simulation requirement description (simulation_requirement)"
             }), 400
         
         # get文档文本
@@ -470,8 +470,8 @@ def prepare_simulation():
         # ========== 同步getentityquantity（in后台任务start前） ==========
         # this样前端incallprepare后立即thencanget到预期Agenttotal
         try:
-            logger.info(f"同步getentityquantity: graph_id={state.graph_id}")
-            reader = ZepEntityReader()
+            logger.info(f"Synchronously getting entity count: graph_id={state.graph_id}")
+            reader = Neo4jEntityReader()
             # quickreadentity（not需wantedgeinformation，只statisticsquantity）
             filtered_preview = reader.filter_defined_entities(
                 graph_id=state.graph_id,
@@ -481,9 +481,9 @@ def prepare_simulation():
             # saveentityquantity到status（供前端立即get）
             state.entities_count = filtered_preview.filtered_count
             state.entity_types = list(filtered_preview.entity_types)
-            logger.info(f"预期entityquantity: {filtered_preview.filtered_count}, type: {filtered_preview.entity_types}")
+            logger.info(f"Expected entity count: {filtered_preview.filtered_count}, types: {filtered_preview.entity_types}")
         except Exception as e:
-            logger.warning(f"同步getentityquantityfailed（ will in后台任务 retry）: {e}")
+            logger.warning(f"Synchronous entity count fetch failed (will retry in background task): {e}")
             # failednot影响后续流程，后台任务will重新get
         
         # create异步任务
@@ -592,7 +592,7 @@ def prepare_simulation():
                 )
                 
             except Exception as e:
-                logger.error(f"准备simulationfailed: {str(e)}")
+                logger.error(f"Prepare simulation failed: {str(e)}")
                 task_manager.fail_task(task_id, str(e))
                 
                 # updatesimulationstatusforfailed
@@ -626,7 +626,7 @@ def prepare_simulation():
         }), 404
         
     except Exception as e:
-        logger.error(f"start准备任务failed: {str(e)}")
+        logger.error(f"Start preparation task failed: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -740,7 +740,7 @@ def get_prepare_status():
         })
         
     except Exception as e:
-        logger.error(f"Query任务statusfailed: {str(e)}")
+        logger.error(f"Query task status failed: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e)
@@ -801,7 +801,7 @@ def list_simulations():
         })
         
     except Exception as e:
-        logger.error(f"列出simulationfailed: {str(e)}")
+        logger.error(f"List simulations failed: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -949,7 +949,7 @@ def get_simulation_profiles_realtime(simulation_id: str):
         })
         
     except Exception as e:
-        logger.error(f"实时getProfilefailed: {str(e)}")
+        logger.error(f"Realtime get profile failed: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -1069,7 +1069,7 @@ def get_simulation_config_realtime(simulation_id: str):
         })
         
     except Exception as e:
-        logger.error(f"实时getConfigfailed: {str(e)}")
+        logger.error(f"Realtime get config failed: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -1186,7 +1186,7 @@ def download_simulation_script(script_name: str):
         )
         
     except Exception as e:
-        logger.error(f"download脚本failed: {str(e)}")
+        logger.error(f"Download script failed: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -1203,7 +1203,7 @@ def generate_profiles():
     
     request（JSON）：
         {
-            "graph_id": "mirofish_xxxx",     // 必填
+            "graph_id": "fishi_xxxx",     // 必填
             "entity_types": ["Student"],      //  can 选
             "use_llm": true,                  //  can 选
             "platform": "reddit"              //  can 选
@@ -1223,7 +1223,7 @@ def generate_profiles():
         use_llm = data.get('use_llm', True)
         platform = data.get('platform', 'reddit')
         
-        reader = ZepEntityReader()
+        reader = Neo4jEntityReader()
         filtered = reader.filter_defined_entities(
             graph_id=graph_id,
             defined_entity_types=entity_types,
@@ -1377,7 +1377,7 @@ def start_simulation():
                             try:
                                 SimulationRunner.stop_simulation(simulation_id)
                             except Exception as e:
-                                logger.warning(f"stopsimulation时出现warning: {str(e)}")
+                                logger.warning(f"Warning while stopping simulation: {str(e)}")
                         else:
                             return jsonify({
                                 "success": False,
@@ -1386,14 +1386,14 @@ def start_simulation():
 
                 # ifisforcedmode，清理runninglog
                 if force:
-                    logger.info(f"forcedmode：清理simulationlog {simulation_id}")
+                    logger.info(f"Forced mode: cleaning up simulation logs {simulation_id}")
                     cleanup_result = SimulationRunner.cleanup_simulation_logs(simulation_id)
                     if not cleanup_result.get("success"):
-                        logger.warning(f"清理log时出现warning: {cleanup_result.get('errors')}")
+                        logger.warning(f"Warning while cleaning up logs: {cleanup_result.get('errors')}")
                     force_restarted = True
 
                 # 进程does not exist or alreadyend，重置statusfor ready
-                logger.info(f"simulation {simulation_id} 准备工作alreadycompleted，重置statusfor ready（原status: {state.status.value}）")
+                logger.info(f"simulation {simulation_id} preparation completed, resetting status to ready (original status: {state.status.value})")
                 state.status = SimulationStatus.READY
                 manager._save_simulation_state(state)
             else:
@@ -1417,10 +1417,10 @@ def start_simulation():
             if not graph_id:
                 return jsonify({
                     "success": False,
-                    "error": "启usegraph记忆update需wanthave效of graph_id，请确保projectalready构建graph"
+                    "error": "Enabling graph memory update requires a valid graph_id, please ensure project has built graph"
                 }), 400
             
-            logger.info(f"启usegraph记忆update: simulation_id={simulation_id}, graph_id={graph_id}")
+            logger.info(f"Enabling graph memory update: simulation_id={simulation_id}, graph_id={graph_id}")
         
         # startsimulation
         run_state = SimulationRunner.start_simulation(
@@ -1769,7 +1769,7 @@ def get_simulation_timeline(simulation_id: str):
         })
         
     except Exception as e:
-        logger.error(f"gettime线failed: {str(e)}")
+        logger.error(f"Get timeline failed: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -1876,7 +1876,7 @@ def get_simulation_posts(simulation_id: str):
         })
         
     except Exception as e:
-        logger.error(f"get帖子failed: {str(e)}")
+        logger.error(f"Get posts failed: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -1951,7 +1951,7 @@ def get_simulation_comments(simulation_id: str):
         })
         
     except Exception as e:
-        logger.error(f"get评论failed: {str(e)}")
+        logger.error(f"Get comments failed: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -2220,7 +2220,7 @@ def interview_agents_batch():
         }), 504
 
     except Exception as e:
-        logger.error(f"批量Interviewfailed: {str(e)}")
+        logger.error(f"Batch interview failed: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -2323,7 +2323,7 @@ def interview_all_agents():
         }), 504
 
     except Exception as e:
-        logger.error(f"全局Interviewfailed: {str(e)}")
+        logger.error(f"Global interview failed: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -2530,7 +2530,7 @@ def close_simulation_env():
         }), 400
         
     except Exception as e:
-        logger.error(f"关闭environmentfailed: {str(e)}")
+        logger.error(f"Close environment failed: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),

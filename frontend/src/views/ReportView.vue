@@ -3,7 +3,7 @@
     <!-- Header -->
     <header class="app-header">
       <div class="header-left">
-        <div class="brand" @click="router.push('/')">MIROFISH</div>
+        <div class="brand" @click="router.push('/')">FISHI</div>
       </div>
       
       <div class="header-center">
@@ -78,7 +78,7 @@ const props = defineProps({
   reportId: String
 })
 
-// Layout State - 默认Toggle到Workbench视角
+// Layout State - Default to Workbench view
 const viewMode = ref('workbench')
 
 // Data State
@@ -141,19 +141,19 @@ const loadReportData = async () => {
   try {
     addLog(`Loading report data: ${currentReportId.value}`)
     
-    // get report Info以get simulation_id
+    // Get report info to fetch simulation_id
     const reportRes = await getReport(currentReportId.value)
     if (reportRes.success && reportRes.data) {
       const reportData = reportRes.data
       simulationId.value = reportData.simulation_id
       
       if (simulationId.value) {
-        // get simulation Info
+        // Get simulation info
         const simRes = await getSimulation(simulationId.value)
         if (simRes.success && simRes.data) {
           const simData = simRes.data
           
-          // get project Info
+          // Get project info
           if (simData.project_id) {
             const projRes = await getProject(simData.project_id)
             if (projRes.success && projRes.data) {

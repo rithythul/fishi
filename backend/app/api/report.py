@@ -1,6 +1,6 @@
 """
-Report API路由
-提供simulationreportgenerate、get、dialogueetcinterface
+Report API Routes
+Provides simulation report generation, retrieval, and dialogue interfaces
 """
 
 import os
@@ -16,23 +16,23 @@ from ..models.project import ProjectManager
 from ..models.task import TaskManager, TaskStatus
 from ..utils.logger import get_logger
 
-logger = get_logger('mirofish.api.report')
+logger = get_logger('fishi.api.report')
 
 
-# ============== report generationinterface ==============
+# ============== Report Generation Interface ==============
 
 @report_bp.route('/generate', methods=['POST'])
 def generate_report():
     """
-    generatesimulation分析report（异步任务）
+    Generate simulation analysis report (async task)
     
-    thisis a耗时操作，interfacewill立即returntask_id，
-    use GET /api/report/generate/status Query进度
+    This is a time-consuming operation. The interface returns task_id immediately.
+    Use GET /api/report/generate/status to query progress.
     
-    request（JSON）：
+    Request (JSON):
         {
-            "simulation_id": "sim_xxxx",    // 必填，simulationID
-            "force_regenerate": false        //  can 选，forced重新generate
+            "simulation_id": "sim_xxxx",    // Required, simulation ID
+            "force_regenerate": false        // Optional, force regenerate
         }
     
     Returns:
@@ -42,7 +42,7 @@ def generate_report():
                 "simulation_id": "sim_xxxx",
                 "task_id": "task_xxxx",
                 "status": "generating",
-                "message": "report generation任务alreadystart"
+                "message": "Report generation task started"
             }
         }
     """
@@ -53,22 +53,22 @@ def generate_report():
         if not simulation_id:
             return jsonify({
                 "success": False,
-                "error": "please provide simulation_id"
+                "error": "Please provide simulation_id"
             }), 400
         
         force_regenerate = data.get('force_regenerate', False)
         
-        # getsimulationinformation
+        # Get simulation information
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
         
         if not state:
             return jsonify({
                 "success": False,
-                "error": f"simulationdoes not exist: {simulation_id}"
+                "error": f"Simulation does not exist: {simulation_id}"
             }), 404
         
-        # checkwhether toalreadyhavereport
+        # Check if report already exists
         if not force_regenerate:
             existing_report = ReportManager.get_report_by_simulation(simulation_id)
             if existing_report and existing_report.status == ReportStatus.COMPLETED:
@@ -78,38 +78,38 @@ def generate_report():
                         "simulation_id": simulation_id,
                         "report_id": existing_report.report_id,
                         "status": "completed",
-                        "message": "reportalready存in",
+                        "message": "Report already exists",
                         "already_generated": True
                     }
                 })
         
-        # getprojectinformation
+        # Get project information
         project = ProjectManager.get_project(state.project_id)
         if not project:
             return jsonify({
                 "success": False,
-                "error": f"projectdoes not exist: {state.project_id}"
+                "error": f"Project does not exist: {state.project_id}"
             }), 404
         
         graph_id = state.graph_id or project.graph_id
         if not graph_id:
             return jsonify({
                 "success": False,
-                "error": "缺少graphID，请确保already构建graph"
+                "error": "Missing graph ID, please ensure graph has been built"
             }), 400
         
         simulation_requirement = project.simulation_requirement
         if not simulation_requirement:
             return jsonify({
                 "success": False,
-                "error": "缺少simulationrequirementdescription"
+                "error": "Missing simulation requirement description"
             }), 400
         
-        # 提前generation report_id，以便立即returngive前端
+        # Pre-generate report_id so it can be returned immediately to frontend
         import uuid
         report_id = f"report_{uuid.uuid4().hex[:12]}"
         
-        # create异步任务
+        # Create async task
         task_manager = TaskManager()
         task_id = task_manager.create_task(
             task_type="report_generate",
@@ -120,24 +120,24 @@ def generate_report():
             }
         )
         
-        # 定义后台任务
+        # Define background task
         def run_generate():
             try:
                 task_manager.update_task(
                     task_id,
                     status=TaskStatus.PROCESSING,
                     progress=0,
-                    message="initializationReport Agent..."
+                    message="Initializing Report Agent..."
                 )
                 
-                # createReport Agent
+                # Create Report Agent
                 agent = ReportAgent(
                     graph_id=graph_id,
                     simulation_id=simulation_id,
                     simulation_requirement=simulation_requirement
                 )
                 
-                # 进度回调
+                # Progress callback
                 def progress_callback(stage, progress, message):
                     task_manager.update_task(
                         task_id,
@@ -145,13 +145,13 @@ def generate_report():
                         message=f"[{stage}] {message}"
                     )
                 
-                # generationreport（传入预firstgenerateof report_id）
+                # Generate report (pass pre-generated report_id)
                 report = agent.generate_report(
                     progress_callback=progress_callback,
                     report_id=report_id
                 )
                 
-                # savereport
+                # Save report
                 ReportManager.save_report(report)
                 
                 if report.status == ReportStatus.COMPLETED:
@@ -164,13 +164,13 @@ def generate_report():
                         }
                     )
                 else:
-                    task_manager.fail_task(task_id, report.error or "report generationfailed")
+                    task_manager.fail_task(task_id, report.error or "Report generation failed")
                 
             except Exception as e:
-                logger.error(f"report generationfailed: {str(e)}")
+                logger.error(f"Report generation failed: {str(e)}")
                 task_manager.fail_task(task_id, str(e))
         
-        # start后台线程
+        # Start background thread
         thread = threading.Thread(target=run_generate, daemon=True)
         thread.start()
         
@@ -181,13 +181,13 @@ def generate_report():
                 "report_id": report_id,
                 "task_id": task_id,
                 "status": "generating",
-                "message": "report generation任务alreadystart，请through /api/report/generate/status Query进度",
+                "message": "Report generation task started, query progress via /api/report/generate/status",
                 "already_generated": False
             }
         })
         
     except Exception as e:
-        logger.error(f"startreport generation任务failed: {str(e)}")
+        logger.error(f"Failed to start report generation task: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -198,12 +198,12 @@ def generate_report():
 @report_bp.route('/generate/status', methods=['POST'])
 def get_generate_status():
     """
-    Queryreportgenerate任务进度
+    Query report generation task progress
     
-    request（JSON）：
+    Request (JSON):
         {
-            "task_id": "task_xxxx",         //  can 选，generatereturnoftask_id
-            "simulation_id": "sim_xxxx"     //  can 选，simulationID
+            "task_id": "task_xxxx",         // Optional, task_id from generate
+            "simulation_id": "sim_xxxx"     // Optional, simulation ID
         }
     
     Returns:
@@ -223,7 +223,7 @@ def get_generate_status():
         task_id = data.get('task_id')
         simulation_id = data.get('simulation_id')
         
-        # if提供simulation_id，firstcheckwhether toalreadyhavecompletedofreport
+        # If simulation_id provided, first check if report already completed
         if simulation_id:
             existing_report = ReportManager.get_report_by_simulation(simulation_id)
             if existing_report and existing_report.status == ReportStatus.COMPLETED:
@@ -234,7 +234,7 @@ def get_generate_status():
                         "report_id": existing_report.report_id,
                         "status": "completed",
                         "progress": 100,
-                        "message": "reportalreadygeneration",
+                        "message": "Report already generated",
                         "already_completed": True
                     }
                 })
@@ -242,7 +242,7 @@ def get_generate_status():
         if not task_id:
             return jsonify({
                 "success": False,
-                "error": "please provide task_id  or  simulation_id"
+                "error": "Please provide task_id or simulation_id"
             }), 400
         
         task_manager = TaskManager()
@@ -251,7 +251,7 @@ def get_generate_status():
         if not task:
             return jsonify({
                 "success": False,
-                "error": f"任务does not exist: {task_id}"
+                "error": f"Task does not exist: {task_id}"
             }), 404
         
         return jsonify({
@@ -260,19 +260,19 @@ def get_generate_status():
         })
         
     except Exception as e:
-        logger.error(f"Query任务statusfailed: {str(e)}")
+        logger.error(f"Failed to query task status: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e)
         }), 500
 
 
-# ============== reportgetinterface ==============
+# ============== Report Retrieval Interface ==============
 
 @report_bp.route('/<report_id>', methods=['GET'])
 def get_report(report_id: str):
     """
-    getreportdetails
+    Get report details
     
     Returns:
         {
@@ -294,7 +294,7 @@ def get_report(report_id: str):
         if not report:
             return jsonify({
                 "success": False,
-                "error": f"reportdoes not exist: {report_id}"
+                "error": f"Report does not exist: {report_id}"
             }), 404
         
         return jsonify({
@@ -303,7 +303,7 @@ def get_report(report_id: str):
         })
         
     except Exception as e:
-        logger.error(f"getreportfailed: {str(e)}")
+        logger.error(f"Failed to get report: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -314,7 +314,7 @@ def get_report(report_id: str):
 @report_bp.route('/by-simulation/<simulation_id>', methods=['GET'])
 def get_report_by_simulation(simulation_id: str):
     """
-    according tosimulationIDgetreport
+    Get report by simulation ID
     
     Returns:
         {
@@ -331,7 +331,7 @@ def get_report_by_simulation(simulation_id: str):
         if not report:
             return jsonify({
                 "success": False,
-                "error": f"该simulation暂无report: {simulation_id}",
+                "error": f"No report for this simulation: {simulation_id}",
                 "has_report": False
             }), 404
         
@@ -342,7 +342,7 @@ def get_report_by_simulation(simulation_id: str):
         })
         
     except Exception as e:
-        logger.error(f"getreportfailed: {str(e)}")
+        logger.error(f"Failed to get report: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -353,11 +353,11 @@ def get_report_by_simulation(simulation_id: str):
 @report_bp.route('/list', methods=['GET'])
 def list_reports():
     """
-    列出所havereport
+    List all reports
     
-    QueryArgs:
-        simulation_id: BysimulationIDfilter（ can 选）
-        limit: returnquantity限制（默认50）
+    Query Args:
+        simulation_id: Filter by simulation ID (optional)
+        limit: Return count limit (default 50)
     
     Returns:
         {
@@ -382,7 +382,7 @@ def list_reports():
         })
         
     except Exception as e:
-        logger.error(f"列出reportfailed: {str(e)}")
+        logger.error(f"Failed to list reports: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -393,9 +393,9 @@ def list_reports():
 @report_bp.route('/<report_id>/download', methods=['GET'])
 def download_report(report_id: str):
     """
-    downloadreport（MarkdownFormat）
+    Download report (Markdown format)
     
-    returnMarkdownfiles
+    Returns Markdown file
     """
     try:
         report = ReportManager.get_report(report_id)
@@ -403,13 +403,13 @@ def download_report(report_id: str):
         if not report:
             return jsonify({
                 "success": False,
-                "error": f"reportdoes not exist: {report_id}"
+                "error": f"Report does not exist: {report_id}"
             }), 404
         
         md_path = ReportManager._get_report_markdown_path(report_id)
         
         if not os.path.exists(md_path):
-            # ifMDfilesdoes not exist，generation一临时files
+            # If MD file doesn't exist, create a temporary file
             import tempfile
             with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
                 f.write(report.markdown_content)
@@ -428,7 +428,7 @@ def download_report(report_id: str):
         )
         
     except Exception as e:
-        logger.error(f"downloadreportfailed: {str(e)}")
+        logger.error(f"Failed to download report: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -438,23 +438,23 @@ def download_report(report_id: str):
 
 @report_bp.route('/<report_id>', methods=['DELETE'])
 def delete_report(report_id: str):
-    """deletereport"""
+    """Delete report"""
     try:
         success = ReportManager.delete_report(report_id)
         
         if not success:
             return jsonify({
                 "success": False,
-                "error": f"reportdoes not exist: {report_id}"
+                "error": f"Report does not exist: {report_id}"
             }), 404
         
         return jsonify({
             "success": True,
-            "message": f"reportalreadydelete: {report_id}"
+            "message": f"Report deleted: {report_id}"
         })
         
     except Exception as e:
-        logger.error(f"deletereportfailed: {str(e)}")
+        logger.error(f"Failed to delete report: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -462,20 +462,20 @@ def delete_report(report_id: str):
         }), 500
 
 
-# ============== Report Agentdialogueinterface ==============
+# ============== Report Agent Chat Interface ==============
 
 @report_bp.route('/chat', methods=['POST'])
 def chat_with_report_agent():
     """
-    withReport Agentdialogue
+    Chat with Report Agent
     
-    Report Agentcaninin dialogueautonomouscallsearchtoolcome回答问题
+    Report Agent can autonomously call search tools to answer questions
     
-    request（JSON）：
+    Request (JSON):
         {
-            "simulation_id": "sim_xxxx",        // 必填，simulationID
-            "message": "请解释一下舆情走向",    // 必填，usermessage
-            "chat_history": [                   //  can 选，dialoguehistory
+            "simulation_id": "sim_xxxx",        // Required, simulation ID
+            "message": "Explain the trend",     // Required, user message
+            "chat_history": [                   // Optional, chat history
                 {"role": "user", "content": "..."},
                 {"role": "assistant", "content": "..."}
             ]
@@ -485,9 +485,9 @@ def chat_with_report_agent():
         {
             "success": true,
             "data": {
-                "response": "Agent回复...",
-                "tool_calls": [calloftoollist],
-                "sources": [informationcome源]
+                "response": "Agent response...",
+                "tool_calls": [list of tool calls],
+                "sources": [information sources]
             }
         }
     """
@@ -501,42 +501,42 @@ def chat_with_report_agent():
         if not simulation_id:
             return jsonify({
                 "success": False,
-                "error": "please provide simulation_id"
+                "error": "Please provide simulation_id"
             }), 400
         
         if not message:
             return jsonify({
                 "success": False,
-                "error": "please provide message"
+                "error": "Please provide message"
             }), 400
         
-        # getsimulationandprojectinformation
+        # Get simulation and project information
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
         
         if not state:
             return jsonify({
                 "success": False,
-                "error": f"simulationdoes not exist: {simulation_id}"
+                "error": f"Simulation does not exist: {simulation_id}"
             }), 404
         
         project = ProjectManager.get_project(state.project_id)
         if not project:
             return jsonify({
                 "success": False,
-                "error": f"projectdoes not exist: {state.project_id}"
+                "error": f"Project does not exist: {state.project_id}"
             }), 404
         
         graph_id = state.graph_id or project.graph_id
         if not graph_id:
             return jsonify({
                 "success": False,
-                "error": "缺少graphID"
+                "error": "Missing graph ID"
             }), 400
         
         simulation_requirement = project.simulation_requirement or ""
         
-        # createAgent并进行dialogue
+        # Create Agent and chat
         agent = ReportAgent(
             graph_id=graph_id,
             simulation_id=simulation_id,
@@ -551,7 +551,7 @@ def chat_with_report_agent():
         })
         
     except Exception as e:
-        logger.error(f"dialoguefailed: {str(e)}")
+        logger.error(f"Chat failed: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -559,12 +559,12 @@ def chat_with_report_agent():
         }), 500
 
 
-# ============== report进度with分sectioninterface ==============
+# ============== Report Progress and Section Interface ==============
 
 @report_bp.route('/<report_id>/progress', methods=['GET'])
 def get_report_progress(report_id: str):
     """
-    getreportgenerate进度（实时）
+    Get report generation progress (real-time)
     
     Returns:
         {
@@ -572,9 +572,9 @@ def get_report_progress(report_id: str):
             "data": {
                 "status": "generating",
                 "progress": 45,
-                "message": "in progressgenerating section: 关key发现",
-                "current_section": "关key发现",
-                "completed_sections": ["execute摘want", "simulation背景"],
+                "message": "Generating section: Key Findings",
+                "current_section": "Key Findings",
+                "completed_sections": ["Executive Summary", "Background"],
                 "updated_at": "2025-12-09T..."
             }
         }
@@ -585,7 +585,7 @@ def get_report_progress(report_id: str):
         if not progress:
             return jsonify({
                 "success": False,
-                "error": f"reportdoes not exist or 进度informationnot can use: {report_id}"
+                "error": f"Report does not exist or progress unavailable: {report_id}"
             }), 404
         
         return jsonify({
@@ -594,7 +594,7 @@ def get_report_progress(report_id: str):
         })
         
     except Exception as e:
-        logger.error(f"getreport进度failed: {str(e)}")
+        logger.error(f"Failed to get report progress: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -605,9 +605,10 @@ def get_report_progress(report_id: str):
 @report_bp.route('/<report_id>/sections', methods=['GET'])
 def get_report_sections(report_id: str):
     """
-    get already generateofsectionlist（分section输出）
+    Get already generated section list (incremental output)
     
-    前端can轮询此interfaceget already generateofsectioncontent，无需etc待整reportcompleted
+    Frontend can poll this interface to get generated section content
+    without waiting for the entire report to complete.
     
     Returns:
         {
@@ -618,7 +619,7 @@ def get_report_sections(report_id: str):
                     {
                         "filename": "section_01.md",
                         "section_index": 1,
-                        "content": "## execute摘want\\n\\n..."
+                        "content": "## Executive Summary\\n\\n..."
                     },
                     ...
                 ],
@@ -630,7 +631,7 @@ def get_report_sections(report_id: str):
     try:
         sections = ReportManager.get_generated_sections(report_id)
         
-        # getreportstatus
+        # Get report status
         report = ReportManager.get_report(report_id)
         is_complete = report is not None and report.status == ReportStatus.COMPLETED
         
@@ -645,7 +646,7 @@ def get_report_sections(report_id: str):
         })
         
     except Exception as e:
-        logger.error(f"getsectionlistfailed: {str(e)}")
+        logger.error(f"Failed to get section list: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -656,14 +657,14 @@ def get_report_sections(report_id: str):
 @report_bp.route('/<report_id>/section/<int:section_index>', methods=['GET'])
 def get_single_section(report_id: str, section_index: int):
     """
-    get单sectioncontent
+    Get single section content
     
     Returns:
         {
             "success": true,
             "data": {
                 "filename": "section_01.md",
-                "content": "## execute摘want\\n\\n..."
+                "content": "## Executive Summary\\n\\n..."
             }
         }
     """
@@ -673,7 +674,7 @@ def get_single_section(report_id: str, section_index: int):
         if not os.path.exists(section_path):
             return jsonify({
                 "success": False,
-                "error": f"sectiondoes not exist: section_{section_index:02d}.md"
+                "error": f"Section does not exist: section_{section_index:02d}.md"
             }), 404
         
         with open(section_path, 'r', encoding='utf-8') as f:
@@ -689,7 +690,7 @@ def get_single_section(report_id: str, section_index: int):
         })
         
     except Exception as e:
-        logger.error(f"getsectioncontentfailed: {str(e)}")
+        logger.error(f"Failed to get section content: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -697,14 +698,14 @@ def get_single_section(report_id: str, section_index: int):
         }), 500
 
 
-# ============== reportstatuscheckinterface ==============
+# ============== Report Status Check Interface ==============
 
 @report_bp.route('/check/<simulation_id>', methods=['GET'])
 def check_report_status(simulation_id: str):
     """
-    checksimulationwhether tohavereport，andreportstatus
+    Check if simulation has a report and its status
     
-    use于前端判断whether to解锁Interviewfunction
+    Used by frontend to determine if interview feature should be unlocked
     
     Returns:
         {
@@ -725,7 +726,7 @@ def check_report_status(simulation_id: str):
         report_status = report.status.value if report else None
         report_id = report.report_id if report else None
         
-        # 只havereportcompleted后才解锁interview
+        # Interview only unlocked after report is completed
         interview_unlocked = has_report and report.status == ReportStatus.COMPLETED
         
         return jsonify({
@@ -740,7 +741,7 @@ def check_report_status(simulation_id: str):
         })
         
     except Exception as e:
-        logger.error(f"checkreportstatusfailed: {str(e)}")
+        logger.error(f"Failed to check report status: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -748,20 +749,20 @@ def check_report_status(simulation_id: str):
         }), 500
 
 
-# ============== Agent loginterface ==============
+# ============== Agent Log Interface ==============
 
 @report_bp.route('/<report_id>/agent-log', methods=['GET'])
 def get_agent_log(report_id: str):
     """
-    get Report Agent ofdetailedexecutelog
+    Get Report Agent detailed execution log
     
-    实时getreportgenerate过程 ofeach stepaction，package括：
-    - reportstart、planstart/completed
-    - 每sectionofstart、toolcall、LLMresponse、completed
-    - reportcompleted or failed
+    Real-time get each step action during report generation:
+    - Report start, plan start/completed
+    - Each section's start, tool call, LLM response, completed
+    - Report completed or failed
     
-    QueryArgs:
-        from_line: from第几行startread（ can 选，默认0，use于增量get）
+    Query Args:
+        from_line: Start reading from line (optional, default 0, for incremental get)
     
     Returns:
         {
@@ -774,7 +775,7 @@ def get_agent_log(report_id: str):
                         "report_id": "report_xxxx",
                         "action": "tool_call",
                         "stage": "generating",
-                        "section_title": "execute摘want",
+                        "section_title": "Executive Summary",
                         "section_index": 1,
                         "details": {
                             "tool_name": "insight_forge",
@@ -801,7 +802,7 @@ def get_agent_log(report_id: str):
         })
         
     except Exception as e:
-        logger.error(f"getAgentlogfailed: {str(e)}")
+        logger.error(f"Failed to get Agent log: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -812,7 +813,7 @@ def get_agent_log(report_id: str):
 @report_bp.route('/<report_id>/agent-log/stream', methods=['GET'])
 def stream_agent_log(report_id: str):
     """
-    getcompleteof Agent log（一times性get全部）
+    Get complete Agent log (one-time fetch all)
     
     Returns:
         {
@@ -835,7 +836,7 @@ def stream_agent_log(report_id: str):
         })
         
     except Exception as e:
-        logger.error(f"getAgentlogfailed: {str(e)}")
+        logger.error(f"Failed to get Agent log: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -843,27 +844,27 @@ def stream_agent_log(report_id: str):
         }), 500
 
 
-# ============== 控制台loginterface ==============
+# ============== Console Log Interface ==============
 
 @report_bp.route('/<report_id>/console-log', methods=['GET'])
 def get_console_log(report_id: str):
     """
-    get Report Agent of控制台输出log
+    Get Report Agent console output log
     
-    实时getreportgenerate过程 of控制台输出（INFO、WARNINGetc），
-    thiswith agent-log interfacereturnofstructure化 JSON lognot同，
-    is纯文本Formatof控制台风格log。
+    Real-time get console output during report generation (INFO, WARNING, etc.)
+    Different from agent-log which returns structured JSON, this is plain text
+    console-style log.
     
-    QueryArgs:
-        from_line: from第几行startread（ can 选，默认0，use于增量get）
+    Query Args:
+        from_line: Start reading from line (optional, default 0, for incremental get)
     
     Returns:
         {
             "success": true,
             "data": {
                 "logs": [
-                    "[19:46:14] INFO: searchcompleted: 找到 15 relatedfacts",
-                    "[19:46:14] INFO: graphsearch: graph_id=xxx, query=...",
+                    "[19:46:14] INFO: Search completed: found 15 related facts",
+                    "[19:46:14] INFO: graph search: graph_id=xxx, query=...",
                     ...
                 ],
                 "total_lines": 100,
@@ -883,7 +884,7 @@ def get_console_log(report_id: str):
         })
         
     except Exception as e:
-        logger.error(f"get控制台logfailed: {str(e)}")
+        logger.error(f"Failed to get console log: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -894,7 +895,7 @@ def get_console_log(report_id: str):
 @report_bp.route('/<report_id>/console-log/stream', methods=['GET'])
 def stream_console_log(report_id: str):
     """
-    getcompleteof控制台log（一times性get全部）
+    Get complete console log (one-time fetch all)
     
     Returns:
         {
@@ -917,7 +918,7 @@ def stream_console_log(report_id: str):
         })
         
     except Exception as e:
-        logger.error(f"get控制台logfailed: {str(e)}")
+        logger.error(f"Failed to get console log: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -925,17 +926,17 @@ def stream_console_log(report_id: str):
         }), 500
 
 
-# ============== toolcallinterface（供debuguse）==============
+# ============== Tool Call Interface (for debug use) ==============
 
 @report_bp.route('/tools/search', methods=['POST'])
 def search_graph_tool():
     """
-    graphsearchtoolinterface（供debuguse）
+    Graph search tool interface (for debug use)
     
-    request（JSON）：
+    Request (JSON):
         {
-            "graph_id": "mirofish_xxxx",
-            "query": "searchQuery",
+            "graph_id": "fishi_xxxx",
+            "query": "search query",
             "limit": 10
         }
     """
@@ -949,12 +950,12 @@ def search_graph_tool():
         if not graph_id or not query:
             return jsonify({
                 "success": False,
-                "error": "please provide graph_id and query"
+                "error": "Please provide graph_id and query"
             }), 400
         
-        from ..services.zep_tools import ZepToolsService
+        from ..services.neo4j_tools import Neo4jToolsService
         
-        tools = ZepToolsService()
+        tools = Neo4jToolsService()
         result = tools.search_graph(
             graph_id=graph_id,
             query=query,
@@ -967,7 +968,7 @@ def search_graph_tool():
         })
         
     except Exception as e:
-        logger.error(f"graphsearchfailed: {str(e)}")
+        logger.error(f"Graph search failed: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),
@@ -978,11 +979,11 @@ def search_graph_tool():
 @report_bp.route('/tools/statistics', methods=['POST'])
 def get_graph_statistics_tool():
     """
-    graphstatisticstoolinterface（供debuguse）
+    Graph statistics tool interface (for debug use)
     
-    request（JSON）：
+    Request (JSON):
         {
-            "graph_id": "mirofish_xxxx"
+            "graph_id": "fishi_xxxx"
         }
     """
     try:
@@ -993,12 +994,12 @@ def get_graph_statistics_tool():
         if not graph_id:
             return jsonify({
                 "success": False,
-                "error": "please provide graph_id"
+                "error": "Please provide graph_id"
             }), 400
         
-        from ..services.zep_tools import ZepToolsService
+        from ..services.neo4j_tools import Neo4jToolsService
         
-        tools = ZepToolsService()
+        tools = Neo4jToolsService()
         result = tools.get_graph_statistics(graph_id)
         
         return jsonify({
@@ -1007,7 +1008,7 @@ def get_graph_statistics_tool():
         })
         
     except Exception as e:
-        logger.error(f"getgraphstatisticsfailed: {str(e)}")
+        logger.error(f"Failed to get graph statistics: {str(e)}")
         return jsonify({
             "success": False,
             "error": str(e),

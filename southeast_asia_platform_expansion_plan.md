@@ -28,7 +28,7 @@
 #### Current Limitation
 MiroFish uses **generic Western patterns** (Twitter/Reddit):
 - ❌ Doesn't reflect actual SE Asian social media behavior
-- ❌ Missing platform-specific features (stickers, mini-apps, payment integration)
+- ❌ Missing platform-specific featuAIzaSyC-yD_IXlRUPZMyeW92VyJpBh0nOwyqK-MAIzaSyC-yD_IXlRUPZMyeW92VyJpBh0nOwyqK-Mres (stickers, mini-apps, payment integration)
 - ❌ Can't simulate cross-platform dynamics (users active on multiple platforms)
 - ❌ Limited cultural context (language mixing, emoji usage, sharing patterns)
 

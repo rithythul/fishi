@@ -38,7 +38,7 @@ From serious predictions to playful simulations, we let every "what if" see its 
 
 | Tool | Version | Description | Check Installation |
 |------|---------|-------------|-------------------|
-| **Node.js** | 18+ | Frontend runtime, includes npm | `node -v` |
+| **Bun** | Latest | Fast JavaScript runtime & package manager | `bun -v` |
 | **Python** | 3.11+ | Backend runtime | `python --version` |
 | **uv** | Latest | Python package manager | `uv --version` |
 | **Docker** | Latest | For Neo4j database | `docker --version` |
@@ -83,24 +83,24 @@ NEO4J_DATABASE=neo4j
 
 ```bash
 # One-click installation of all dependencies (root + frontend + backend)
-npm run setup:all
+bun run setup:all
 ```
 
 Or install step by step:
 
 ```bash
-# Install Node dependencies (root + frontend)
-npm run setup
+# Install dependencies (root + frontend)
+bun install
 
 # Install Python dependencies (auto-creates virtual environment)
-npm run setup:backend
+bun run setup:backend
 ```
 
 ### 4. Start Services
 
 ```bash
 # Start both frontend and backend (run from project root)
-npm run dev
+bun dev
 ```
 
 **Service URLs:**
@@ -110,8 +110,8 @@ npm run dev
 **Start Individually:**
 
 ```bash
-npm run backend   # Start backend only
-npm run frontend  # Start frontend only
+bun run backend   # Start backend only
+bun run frontend  # Start frontend only
 ```
 
 ## 🛠️ Tech Stack
